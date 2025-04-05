@@ -1,7 +1,7 @@
 import boto3
 from os import getenv
 from dotenv import load_dotenv
-from telegram import Bot
+import requests
 
 load_dotenv()
 AWS_ACCESS_KEY = getenv("MY_AWS_ACCESS_KEY")
@@ -11,8 +11,20 @@ TG_SIGNAL_BOT_TOKEN = getenv("TG_SIGNAL_BOT_TOKEN")
 TO_CHANNEL_ID = getenv("TO_CHANNEL_ID")
 
 dynamodb = boto3.client('dynamodb', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY, region_name=AWS_REGION)
-telegram_bot = Bot(token=TG_SIGNAL_BOT_TOKEN)
 sqs_client = boto3.client("sqs", aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY, region_name=AWS_REGION)
+
+class Telegram:
+    def __init__(self, token:str):
+        self.token = token
+
+    def send_message(self, chat_id, text, reply_id=None):
+        return requests.post(f'https://api.telegram.org/bot{self.token}/sendMessage', json={
+                'chat_id': chat_id,
+                'text': text,
+                "parse_mode": "html",
+                "reply_to_message_id": reply_id,
+        }).json()
+
 
 SELL = 'SELL|sell|SHORT|short'
 BUY = 'BUY|buy|LONG|long'

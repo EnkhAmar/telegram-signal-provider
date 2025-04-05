@@ -2,10 +2,11 @@ import json
 from dynamodb_json import json_util
 import traceback
 from classifiers import ForexSignalProcessor
-from extension import dynamodb, telegram_bot, TO_CHANNEL_ID
+from extension import dynamodb, TO_CHANNEL_ID, Telegram, TG_SIGNAL_BOT_TOKEN
 import utils
 
 processor = ForexSignalProcessor()
+telegram_bot = Telegram(token=TG_SIGNAL_BOT_TOKEN)
 
 # handle sqs duplicate message
 ##
@@ -58,6 +59,7 @@ def handler(event, context):
                         "updated_at": "",
                     }, True)
                 )
+
             telegram_bot.send_message(
                 chat_id=TO_CHANNEL_ID,
                 text=json.dumps(result)

@@ -45,8 +45,8 @@ async def new_message_handler(event):
             MessageBody=json.dumps(body),
             MessageGroupId=f'queue-{event.chat_id}',
         )
-        await client.forward_messages(to_channel, event.message)
-        print(f"Forwarded new message from {event.chat_id} to {to_channel}")
+        # await client.forward_messages(to_channel, event.message)
+        # print(f"Forwarded new message from {event.chat_id} to {to_channel}")
     except Exception as e:
         print(f"Failed to forward new message: {e}")
 
