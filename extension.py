@@ -24,6 +24,43 @@ class Telegram:
                 "parse_mode": "html",
                 "reply_to_message_id": reply_id,
         }).json()
+    
+    def make_entry_message(self, data):
+        side_emoji = "📈" if data['side'] == 'BUY' else "📉"
+        tp_lines = "\n".join([f"💰TP{idx+1} {tp}" for idx, tp in enumerate(data['take_profit'])])
+        
+        message = (
+            f"{data['pair']}  {data['entry']} {data['side']}\n\n"
+            f"{tp_lines}\n"
+            f"🚫SL {data['stop_loss']}\n\n"
+            "❗️Арилжаанд орох хамгийн дээд ханшнаас дээгүүр орсон тохиолдолд энэхүү арилжаа нь манай сувгийн signal-тай нийцэхгүй.\n\n"
+            "💸💸💸 Plus-Mongolia-Signal 💰💰💰"
+        )
+        return message
+
+    def make_tp_message(self, data):
+        message = (
+            "💵💵💵💵💵💵💵💵💵💵💵💵\n\n"
+            f"✅✅Take Profit {data['tp_level']} ✅✅\n\n"
+        )
+        
+        if data.get('exit_price'):
+            message += f"TP{data['tp_level']} hit @ {data['exit_price']}\n\n"
+        
+        message += "💸💸💸 Plus-Mongolia-Signal 💰💰💰"
+        return message
+
+    def make_sl_message(self, data):
+        message = (
+            "✖️✖️✖️✖️✖️✖️✖️✖️✖️✖️✖️✖️\n\n"
+            f"❌Stop Loss Hit ❌\n\n"
+        )
+        
+        # if data.get('exit_price'):
+        #     message += f"SL hit @ {data['exit_price']}\n\n"
+        
+        # message += "💸💸💸 Plus-Mongolia-Signal 💰💰💰"
+        return message
 
 
 SELL = 'SELL|sell|SHORT|short'
