@@ -1,0 +1,83 @@
+service: tg-signal-service
+app: tg-signal
+frameworkVersion: '4.6.2'
+
+provider:
+  name: aws
+  runtime: python3.11
+  timeout: 29
+  stage: ${opt:stage, "dev"}
+  region: ${opt:region, "ap-northeast-2"}
+  profile: amarhan
+  logRetentionInDays: 365
+  iam:
+    role: "arn:aws:iam::${self:provider.environment.ACCOUNT_ID}:role/tg-sls-role"
+  deploymentBucket:
+    name: deployment-bucket-${self:provider.stage}-${self:provider.region}-tg-signal
+
+  environment:
+    STAGE: ${self:provider.stage}
+    REGION: ${self:provider.region}
+    ACCOUNT_ID: "549378813718"
+
+plugins:
+  - serverless-python-requirements
+  - serverless-dotenv-plugin
+  - serverless-prune-plugin
+functions:
+  TgMsgHandler:
+    handler: core/queue.handler
+    timeout: 60
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - TgMsgFifoQueue
+              - Arn
+          batchSize: 5
+          
+  TgMsgDLQHandler:
+    handler: core/queue.dead_letter_handler
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - TgMsgFifoDLQ
+              - Arn
+          batchSize: 10
+custom:
+  accountId: ${self:provider.environment.ACCOUNT_ID}
+  prune:
+    automatic: true
+    number: 2
+
+resources:
+  Resources:
+    TgMsgFifoQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: 'tg_msg_queue.fifo'
+        FifoQueue: true
+        ContentBasedDeduplication: true
+        VisibilityTimeout: 60
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt: [TgMsgFifoDLQ, Arn]
+          maxReceiveCount: 1
+    
+    TgMsgFifoDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: 'tg_msg_queue-dlq.fifo'
+        FifoQueue: true
+        ContentBasedDeduplication: true
+
+outputs:
+  TgMsgFifoQueueUrl:
+    Value:
+      Ref: TgMsgFifoQueue
+  TgMsgFifoQueueArn:
+    Value:
+      Fn::GetAtt:
+        - TgMsgFifoQueue
+        - Arn
