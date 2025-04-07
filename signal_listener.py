@@ -15,6 +15,9 @@ to_channel = int(os.getenv("TO_CHANNEL_ID"))
 from_channels = [
     int(channel.strip()) for channel in os.getenv("FROM_CHANNEL_IDS").split(",")
 ]
+print(os.getenv("FROM_CHANNEL_IDS"))
+
+print("from_channels: ", from_channels)
 
 # Initialize the Telegram client
 client = TelegramClient(session_name, api_id, api_hash)
