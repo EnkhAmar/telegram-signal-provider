@@ -17,7 +17,7 @@ class ForexSignalProcessor:
         # Detect signal source
         if message_data['chat_id'] == -1002643902459:
             classifier = self.classifiers['wolf']
-        elif message_data['chat_id'] == -1002643902460:
+        elif message_data['chat_id'] == -1002587201256:
             classifier = self.classifiers['lord']
         else:
             return None

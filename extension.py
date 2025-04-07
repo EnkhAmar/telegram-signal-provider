@@ -39,10 +39,17 @@ class Telegram:
         return message
 
     def make_tp_message(self, data):
-        message = (
-            "💵💵💵💵💵💵💵💵💵💵💵💵\n\n"
-            f"✅✅Take Profit {data['tp_level']} ✅✅\n\n"
-        )
+        if 'tp_level' in data:
+            message = (
+                "💵💵💵💵💵💵💵💵💵💵💵💵\n\n"
+                f"✅✅Take Profit {data['tp_level']} ✅✅\n\n"
+            )
+        else:
+            message = (
+                "💵💵💵💵💵💵💵💵💵💵💵💵\n\n"
+                f"✅✅Take Profit✅✅\n\n"
+            )
+
         
         if data.get('exit_price'):
             message += f"TP{data['tp_level']} hit @ {data['exit_price']}\n\n"
@@ -51,10 +58,7 @@ class Telegram:
         return message
 
     def make_sl_message(self, data):
-        message = (
-            "✖️✖️✖️✖️✖️✖️✖️✖️✖️✖️✖️✖️\n\n"
-            f"❌Stop Loss Hit ❌\n\n"
-        )
+        message = (f"❌Stop Loss Hit ❌\n\n")
         
         # if data.get('exit_price'):
         #     message += f"SL hit @ {data['exit_price']}\n\n"

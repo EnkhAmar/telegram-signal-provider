@@ -11,9 +11,10 @@ class SignalAction(Enum):
 
 class LordForexClassifier:
     """
-    Final corrected classifier for Lord Forex signals with:
-    - Proper order ID handling ("lord" + original ID)
-    - Accurate pattern matching for all message types
+    Enhanced classifier for Lord Forex signals with:
+    - Better handling of result patterns (with emojis)
+    - More robust pattern matching
+    - Improved order ID handling
     """
     
     def __init__(self):
@@ -27,12 +28,12 @@ class LordForexClassifier:
             re.IGNORECASE
         )
         
-        # CLOSED trade pattern with ID capture
+        # Enhanced CLOSED trade pattern with ID capture and emoji handling
         self.closed_pattern = re.compile(
             r'📥\s*CLOSED\s*-\s*(?P<pair>[A-Z]{2,6}(?:[A-Z0-9]{2,4})?)\s*-\s*(?P<side>Buy|Sell)\s*📥\s*'
             r'Entry:\s*(?P<entry>\d+\.\d+)\s*'
             r'Exit:\s*(?P<exit>\d+\.\d+)\s*'
-            r'Result:\s*(?P<result>[+-]?\d+\.\d+%)\s*'
+            r'Result:\s*(?P<result>[+-]?\d+\.\d+%)\s*(?:[🟢🔴✅❌]+\s*)?'  # Added emoji handling
             r'ID:\s*(?P<id>\d+)',
             re.IGNORECASE
         )
@@ -49,6 +50,7 @@ class LordForexClassifier:
         Process message and return standardized signal with:
         - Proper "lord{id}" order IDs
         - Correct action types
+        - Better handling of result patterns with emojis
         """
         msg_text = self._clean_message(message_data.get('msg_text', ''))
         
@@ -104,15 +106,18 @@ class LordForexClassifier:
         return None
 
     def _process_closed_trade(self, message: str) -> Optional[Dict]:
-        """Process CLOSED trade messages with ID extraction"""
+        """Process CLOSED trade messages with ID extraction and emoji handling"""
         if match := self.closed_pattern.search(message):
+            # Clean the result by removing any trailing emojis that might have been captured
+            result = match.group('result').split()[0]  # Take only the first part (percentage)
+            
             return {
                 "pair": match.group('pair').upper(),
                 "side": match.group('side').upper(),
                 "entry_price": float(match.group('entry')),
                 "exit_price": float(match.group('exit')),
-                "result": match.group('result'),
-                "is_profit": not match.group('result').startswith('-'),
+                "result": result,
+                "is_profit": not result.startswith('-'),
                 "order_id": match.group('id')  # Raw ID (will be prefixed later)
             }
         return None
@@ -132,6 +137,11 @@ if __name__ == "__main__":
             "msg_text": "🔔 NEW ORDER - NAS100 - Sell 🔔\nEntry: 183.542\nTP @ 182.900\nSL @ 184.250\nID: 987654321"
         },
         {
+            "chat_id": -123123,
+            "msg_id": 123,
+            "msg_text": "🔔 NEW ORDER - USDJPY - Buy 🔔\nEntry: 149.298\nTP @ 149.802\nSL @ 148.813\nID: 976546156"
+        },
+        {
             "chat_id": -100123,
             "msg_id": 102,
             "msg_text": "📥 CLOSED - US100 - Sell 📥\nEntry: 183.542\nExit: 182.900\nResult: 3.50%\nID: 987654321"
@@ -145,6 +155,16 @@ if __name__ == "__main__":
             "chat_id": -100123,
             "msg_id": 104,
             "msg_text": "❌ ORDER CANCELLED ❌"
+        },
+        {
+            "chat_id": -100123,
+            "msg_id": 104,
+            "msg_text": "📥 CLOSED - USDJPY - Buy 📥\nEntry: 149.298\nExit: 149.818\nResult: 1.45% 🟢\nID: 976546156"
+        },
+        {
+            "chat_id": -100123,
+            "msg_id": 105,
+            "msg_text": "📥 CLOSED - EURUSD - Sell 📥\nEntry: 1.08965\nExit: 1.08542\nResult: 3.89% ✅\nID: 987654322"
         }
     ]
     

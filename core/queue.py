@@ -41,6 +41,9 @@ def handler(event, context):
                 }, True)
             )
 
+            if result['action'] == 'OTHER':
+                return
+
             to_reply_id = None
             if result['action'] == 'NEW_SIGNAL':
                 dynamodb.put_item(
