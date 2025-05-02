@@ -20,7 +20,7 @@ class WolfCryptoClassifier:
         elif self._is_new_signal(text):
             action = "NEW_SIGNAL"
         else:
-            return None  # Not a relevant message
+            action = "OTHER"
 
         # Generate order_id - use reply_msg_id for TP/SL hits if available
         order_id = self._generate_order_id(msg, action)
@@ -46,7 +46,11 @@ class WolfCryptoClassifier:
 
         # Extract additional data based on action type
         if action == "NEW_SIGNAL":
-            result.update(self._extract_new_signal_data(text))
+            signal_data = self._extract_new_signal_data(text)
+            result.update(signal_data)
+            # Convert empty take_profit list to None
+            if "take_profit" in result and isinstance(result["take_profit"], list) and not result["take_profit"]:
+                result["take_profit"] = None
         elif action in ["TP_HIT", "SL_HIT"]:
             result.update(self._extract_outcome_data(text))
         elif action == "CANCELLED":
@@ -57,6 +61,8 @@ class WolfCryptoClassifier:
 
     def _generate_order_id(self, msg: dict, action: str) -> str:
         """Generate order ID using reply_msg_id for TP/SL hits if available."""
+        if action in ["OTHER"]:
+            return None
         if action in ["TP_HIT", "SL_HIT"] and msg.get("reply_msg_id"):
             return f"{msg['chat_id']}_{msg['reply_msg_id']}"
         return f"{msg['chat_id']}_{msg['msg_id']}"
@@ -107,7 +113,7 @@ class WolfCryptoClassifier:
             ('tp' in text.lower() or 'take profit' in text.lower()) and
             ('sl' in text.lower() or 'stop loss' in text.lower())
         )
-        return has_pair and has_signal_keywords and has_tp_sl
+        return has_pair and (has_signal_keywords or has_tp_sl)
 
     def _extract_new_signal_data(self, text: str) -> Dict:
         """Extract trading details from new signal message."""
@@ -118,39 +124,50 @@ class WolfCryptoClassifier:
         pair_match = re.search(r"\b([A-Z]{2,10}/USDT)\b", text)
         data["pair"] = pair_match.group(1) if pair_match else None
         
-        # Extract side
+        # Extract side (default to sell if not specified)
         if 'buy' in text_lower or 'long' in text_lower:
-            data["side"] = "buy"
+            data["side"] = "BUY"
         elif 'sell' in text_lower or 'short' in text_lower:
-            data["side"] = "sell"
+            data["side"] = "SELL"
+        else:
+            # Default to sell if not specified (common in some signal formats)
+            data["side"] = "None"
         
         # Extract entry price
         entry_match = re.search(
-            r"(?:entry|enter|price)[: ]+([\d.,]+)|"
-            r"enter (?:above|below):\s*([\d.,]+)",
+            r"(?:entry|enter|below|above|price)[: ]+([\d.,]+)|"
+            r"enter (?:above|below):\s*([\d.,]+)|"
+            r"🔹Enter (?:below|above):\s*([\d.,]+)",
             text_lower
         )
         if entry_match:
             entry_str = next(g for g in entry_match.groups() if g is not None)
             data["entry"] = float(entry_str.replace(',', ''))
         
-        # Extract stop loss
+        # Extract stop loss - improved pattern
         sl_match = re.search(
-            r"(?:sl|stop loss)[: ]+([\d.,]+)|"
-            r"🚫sl\s*([\d.,]+)",
-            text_lower
+            r"(?:sl|stop loss|🚫sl)[: ]+([\d.,]+)|"
+            r"🚫sl\s*([\d.,]+)|"
+            r"sl\s*[:=]?\s*([\d.,]+)",
+            text,
+            re.IGNORECASE
         )
         if sl_match:
             sl_str = next(g for g in sl_match.groups() if g is not None)
             data["stop_loss"] = float(sl_str.replace(',', ''))
         
-        # Extract take profits
+        # Extract take profits - improved pattern
         tps = re.findall(
-            r"(?:tp|take profit)\d*[: ]+([\d.,]+)|"
-            r"💰tp\d*\s*([\d.,]+)",
-            text_lower
+            r"(?:tp|take profit|💰tp)\d*[: ]+([\d.,]+)|"
+            r"💰tp\d*\s*([\d.,]+)|"
+            r"tp\d*\s*[:=]?\s*([\d.,]+)",
+            text,
+            re.IGNORECASE
         )
-        data["take_profit"] = [float(tp.replace(',', '')) for match in tps for tp in match if tp]
+        if tps:
+            data["take_profit"] = [float(tp.replace(',', '')) for match in tps for tp in match if tp]
+        else:
+            data["take_profit"] = None
         
         # Extract leverage
         lev_match = re.search(
@@ -211,72 +228,160 @@ class WolfCryptoClassifier:
         return data
     
 
-# classifier = WolfCryptoClassifier()
+# Example Usage
+if __name__ == "__main__":
+    classifier = WolfCryptoClassifier()
 
-# classifier = WolfCryptoClassifier()
+    test_cases = [
+        {
+            "chat_id": -100123,
+            "msg_id": 101,
+            "msg_text": """AAVE/USDT
 
-# # New signal
-# entry_msg = {
-#     "chat_id": 123,
-#     "msg_id": 1,
-#     "msg_text": """BTC/USDT 📈 BUY\n\n🔹Enter above: 93540.6\n💰TP1 93729.2\n💰TP2 94008.4\n🚫SL 93022.8\n〽️Leverage 20x"""
-# }
-# print(classifier.process_message(entry_msg))
+🔹Enter below:167.04(with a minimum value of 166.90)
 
-# # TP hit (reply to original signal)
-# tp_hit_msg = {
-#     "chat_id": 123,
-#     "msg_id": 2,
-#     "reply_msg_id": 1,
-#     "msg_text": """✅✅ BTC/USDT TP2 ✅✅\nProfit Made: 10.006%"""
-# }
-# print(classifier.process_message(tp_hit_msg))
+📉SELL 
 
-# # Cancelled order
-# cancelled_msg = {
-#     "chat_id": 123,
-#     "msg_id": 3,
-#     "msg_text": "#LINK/USDT Manually Cancelled"
-# }
-# print(classifier.process_message(cancelled_msg))
+💰TP1 166.71
+💰TP2 166.21
+💰TP3 164.53
+🚫SL 168.01
 
+〽️Leverage 20x
 
-# other_msg = {
-#     "chat_id": 123,
-#     "msg_id": 123,
-#     "msg_text": """📍APRIL 29TH, 2025 - CRYPTO ANALYSIS👇
+⚠️Respect the entry zone. Check the bio of the channel for all the info required to follow our signals"""
+        },
+        {
+            "chat_id": -123123,
+            "msg_id": 123,
+            "msg_text": """SOL/USDT
 
-# •Bitcoin (BTC): Consolidating Before the Next Big Move
-# ——————————————————
+🔹Enter below:148.50(with a minimum value of 148.40)
 
-# •BTC is currently consolidating inside a 4-day price range on the daily chart, awaiting a breakout to decide the next major move.
+📉SELL 
 
-# 📌 Technical Outlook:
+💰TP1 148.20
+💰TP2 147.76
+💰TP3 146.27
+🚫SL 149.18
 
-# • A breakout above $95.7K would likely trigger a continuation toward the $100K liquidity zone.
-# • A breakdown below $92.7K could lead to a visit into the Fair Value Gap (FVG) before resuming the uptrend — a perfect opportunity to position for longs.
-# • Market momentum remains bullish overall, but patience is key until confirmation.
+〽️Leverage 20x
 
-# 📊 Key Levels to Watch:
+⚠️Respect the entry zone. Check the bio of the channel for all the info required to follow our signals"""
+        },
+        {
+            "chat_id": -100123,
+            "msg_id": 124,
+            "reply_msg_id": 123,
+            "msg_text": """📣 Yes, SOL hit Stop Loss: -9.158%
 
-# • Resistance: $95.7K (range high), $100K (liquidity target)
-# • Support: $92.7K (range low), FVG zone below (potential long setup)
+👉 In general terms, April is being a good month. We expect to have a very positive week, so let’s continue🟢
 
-# 📈 Trading Strategy:
+➡️New Signals coming soon, so pay attention, activate notifications and let’s go for it!✅
 
-# • We will stay patient until a confirmed breakout occurs.
-# • Planning to enter long positions if we fill the FVG after a breakdown.
-# • A clean breakout above $95.7K would also trigger bullish continuation setups.
+🎁 WE HAVE A NEW SURPRISE COMING FOR CRYPTO VIP MEMBERS IN MAY 2025 🎁
 
-# Staying focused — the real opportunity is coming soon.
+———————————————————
+⚠️Best sites follow our Signals (BONUS FOR VIPS) 👉🏻 {HERE}"""
+        },
+        {
+            "chat_id": -100123,
+            "msg_id": 103,
+            "reply_msg_id": 101,
+            "msg_text": """💚💚💚💚💚💚💚💚💚💚💚💚
 
-# ——————————————————
-# ✅ OTHER WOLFX SERVICES ✅
+✅ AAVE/USDT Take Profit 1 ✅
 
-# 📌TRADING ACADEMY: HERE 🟢
+📊 Profit Made: 3.9511%🔥
 
-# ✅ACCOUNT MANAGEMENT HERE
+•AAVE hit a value of 166.420 in BYBIT, completing the first take profit!""",
+        },
+        {
+            "chat_id": -100123,
+            "msg_id": 104,
+            "msg_text": """📍APRIL 27TH, 2025 - CRYPTO ANALYSIS👇
 
-# 📨 FEEDBACK: @WOLFX_SIGNALS"""
-# }
-# print(classifier.process_message(other_msg))
+#Bitcoin (#BTC): Setting Up for a Bullish Week Ahead
+
+$BTC is showing strong signs of continuation as we prepare to close the week with the first green trend bar on the weekly chart in a while. The bullish structure looks intact heading into next week.
+
+📌 Technical Outlook:
+• We expect $BTC to take out last week’s high first before forming the weekly low.
+• A pullback into the Fair Value Gap (FVG) is anticipated — offering a great long opportunity.
+• Momentum remains strong, with $100K–$101K resistance being the next barrier before aiming for the $110K ATH.
+
+📊 Key Levels to Watch:
+• Resistance: $100K–$101K (short-term resistance), $110K (ATH)
+• Support: FVG zone below (entry zone for new longs)
+
+📈 Trading Strategy:
+• Planning to enter new long positions inside the FVG on Monday.
+• Will also start looking for long setups on outperforming altcoins.
+• Preparing for a bullish continuation throughout the week — staying patient but ready to act.
+
+A bullish week ahead is setting up nicely — we are ready!
+
+——————————————————""",
+        },
+        {
+            "chat_id": -100123,
+            "msg_id": 104,
+            "msg_text": """📍APRIL 29TH, 2025 - CRYPTO ANALYSIS👇
+
+•Bitcoin (BTC): Consolidating Before the Next Big Move
+——————————————————
+
+•BTC is currently consolidating inside a 4-day price range on the daily chart, awaiting a breakout to decide the next major move.
+
+📌 Technical Outlook:
+
+• A breakout above $95.7K would likely trigger a continuation toward the $100K liquidity zone.
+• A breakdown below $92.7K could lead to a visit into the Fair Value Gap (FVG) before resuming the uptrend — a perfect opportunity to position for longs.
+• Market momentum remains bullish overall, but patience is key until confirmation.
+
+📊 Key Levels to Watch:
+
+• Resistance: $95.7K (range high), $100K (liquidity target)
+• Support: $92.7K (range low), FVG zone below (potential long setup)
+
+📈 Trading Strategy:
+
+• We will stay patient until a confirmed breakout occurs.
+• Planning to enter long positions if we fill the FVG after a breakdown.
+• A clean breakout above $95.7K would also trigger bullish continuation setups.
+
+Staying focused — the real opportunity is coming soon.
+
+——————————————————
+✅ OTHER WOLFX SERVICES ✅
+
+📌TRADING ACADEMY: HERE 🟢
+
+✅ACCOUNT MANAGEMENT HERE
+
+📨 FEEDBACK: @WOLFX_SIGNALS"""
+        },
+        {
+            "chat_id": -100123,
+            "msg_id": 105,
+            "msg_text": """✅️CRYPTO MARKET UPDATE✅️
+
+•As we approach the end of the month, both Bitcoin and the broader market remain within a consolidation range. Before initiating any new trading strategies, it is essential to wait for a confirmed breakout from this range to determine the next directional move with greater confidence.
+
+•We have a long week ahead, so be patient. New signals are coming really soon family.
+
+Wolfxsignals Team"""
+        }
+    ]
+
+    classifier = WolfCryptoClassifier()
+    for case in test_cases:
+        print("\n" + "="*50)
+        print("Input Message:")
+        print(case["msg_text"])
+        result = classifier.process_message(case)
+        print("\nOutput:")
+        print(f"Action: {result['action']}")
+        print(f"Result: {result}")
+        print(f"Order ID: {result.get('order_id', 'N/A')}")
+        print(f"Details: { {k:v for k,v in result.items() if k not in ['action', 'msg_text', 'chat_id', 'msg_id', 'order_id']} }")

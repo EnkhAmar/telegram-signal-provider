@@ -88,23 +88,24 @@ def handler(event, context):
                 message = telegram_bot.make_tp_message(result) if result['action'] == 'TP_HIT' else telegram_bot.make_sl_message(result)
 
 
-            response = telegram_bot.send_message(
-                chat_id=TO_CHANNEL_ID,
-                text=message,
-                reply_id=to_reply_id,
-            )
-            print("response ", response)
-            if response['ok']:
-                to_msg_id = response['result']['message_id']
-                dynamodb.update_item(
-                    TableName="orders",
-                    Key={"order_id": {"S": result["order_id"]}},
-                    UpdateExpression="SET to_chat_id = :to_chat_id, to_msg_id = :to_msg_id",
-                    ExpressionAttributeValues=json_util.dumps({
-                        ":to_chat_id": TO_CHANNEL_ID,
-                        ":to_msg_id": to_msg_id,
-                    }, True)
+            if result['action'] in ["TP_HIT", "SL_HIT", "NEW_SIGNAL"]:
+                response = telegram_bot.send_message(
+                    chat_id=TO_CHANNEL_ID,
+                    text=message,
+                    reply_id=to_reply_id,
                 )
+                print("response ", response)
+                if response['ok'] and result['action'] == 'NEW_SIGNAL':
+                    to_msg_id = response['result']['message_id']
+                    dynamodb.update_item(
+                        TableName="orders",
+                        Key={"order_id": {"S": result["order_id"]}},
+                        UpdateExpression="SET to_chat_id = :to_chat_id, to_msg_id = :to_msg_id",
+                        ExpressionAttributeValues=json_util.dumps({
+                            ":to_chat_id": TO_CHANNEL_ID,
+                            ":to_msg_id": to_msg_id,
+                        }, True)
+                    )
 
             
         except json.JSONDecodeError as e:

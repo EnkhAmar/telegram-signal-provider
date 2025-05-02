@@ -19,9 +19,14 @@ class ForexSignalProcessor:
         # Detect signal source
         if message_data['chat_id'] == -1001485605405:
             classifier = self.classifiers['wolf_forex']
-        elif message_data['chat_id'] == -1002587201256:
-            classifier = self.classifiers['lord_forex']
+        # elif message_data['chat_id'] == -1002587201256:
+        #     classifier = self.classifiers['lord_forex']
         elif message_data['chat_id'] == -1001338521686:
+            classifier = self.classifiers['wolf_crypto']
+            
+        elif message_data['chat_id'] == -1002643902459:
+            classifier = self.classifiers['wolf_forex']
+        elif message_data['chat_id'] == -1002587201256:
             classifier = self.classifiers['wolf_crypto']
         else:
             return None
