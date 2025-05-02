@@ -25,9 +25,11 @@ def handler(event, context):
             msg_date = message['msg_date']
             msg_text = message['msg_text']
             reply_msg_id = message['reply_msg_id']
+            msg_type = message.get("msg_type", "NEW")
 
             result = processor.process_message(message)
-            print("RESULT", result)
+            print("RAW MSG -- \n", message, "\n")
+            print("RESULT -- \n", result, "\n")
 
             dynamodb.put_item(
                 TableName="telegram_msgs",
@@ -59,6 +61,7 @@ def handler(event, context):
                         "entry": result["entry"],
                         "stop_loss": result["stop_loss"],
                         "take_profit": result["take_profit"],
+                        "leverage": result.get("leverage"),
                         "pnl": 0,
                         "created_at": msg_date,
                         "updated_at": "",

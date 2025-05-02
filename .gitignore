@@ -176,3 +176,5 @@ cython_debug/
 *.session
 .serverless/
 node_modules/
+
+.DS_STORE

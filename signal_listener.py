@@ -2,7 +2,8 @@ import os
 import json
 from dotenv import load_dotenv
 from telethon import TelegramClient, events
-from extension import sqs_client
+from extension import sqs_client, dynamodb
+from dynamodb_json import json_util
 
 # Load environment variables
 load_dotenv()
@@ -12,19 +13,18 @@ session_name = os.getenv("TG_SESSION_NAME")
 
 # Source channels as a list of integers
 to_channel = int(os.getenv("TO_CHANNEL_ID"))
-from_channels = [
-    int(channel.strip()) for channel in os.getenv("FROM_CHANNEL_IDS").split(",")
-]
-print(os.getenv("FROM_CHANNEL_IDS"))
-
-print("from_channels: ", from_channels)
+from_channels = json_util.loads(dynamodb.scan(
+    TableName="signal_channels",
+).get("Items", []))
+from_chat_ids = [channel['chat_id'] for channel in from_channels]
+print("from_chat_ids: ", from_chat_ids)
 
 # Initialize the Telegram client
 client = TelegramClient(session_name, api_id, api_hash)
 
 
 # Register the handler for new messages
-@client.on(events.NewMessage(chats=from_channels))
+@client.on(events.NewMessage(chats=from_chat_ids))
 async def new_message_handler(event):
     try:
         print("EVENT: \n", event)
@@ -41,6 +41,7 @@ async def new_message_handler(event):
             "msg_date": event.message.date.isoformat(),
             "msg_text": event.message.message,
             "reply_msg_id": reply_msg_id,
+            "msg_type": "NEW", # "NEW|EDITED"
         }
         print("body to sent to sqs ", body)
         sqs_client.send_message(
@@ -55,13 +56,13 @@ async def new_message_handler(event):
 
 
 # Register the handler for edited messages
-@client.on(events.MessageEdited(chats=from_channels))
-async def edited_message_handler(event):
-    try:
-        await client.forward_messages(to_channel, event.message)
-        print(f"Forwarded edited message from {event.chat_id} to {to_channel}")
-    except Exception as e:
-        print(f"Failed to forward edited message: {e}")
+# @client.on(events.MessageEdited(chats=from_channels))
+# async def edited_message_handler(event):
+#     try:
+#         await client.forward_messages(to_channel, event.message)
+#         print(f"Forwarded edited message from {event.chat_id} to {to_channel}")
+#     except Exception as e:
+#         print(f"Failed to forward edited message: {e}")
 
 
 if __name__ == "__main__":

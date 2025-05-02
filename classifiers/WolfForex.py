@@ -193,3 +193,15 @@ WOLFXSIGNALS.COM content
     print("\n=== SL Hit Signals ===")
     for msg in sl_msgs:
         print(classifier.process_message(msg))
+
+    print(classifier.process_message({
+        "chat_id": 123,
+        "msg_id": 1,
+        "msg_text": """#XAUUSD Gold Market Update – Key Structure Levels in Play
+
+Gold continues to respect the current box range, consolidating between key support and resistance zones.
+
+📊 Price action is forming a clear accumulation pattern between 3290–3360.
+🔍 A breakout above 3360 would confirm bullish momentum, with potential continuation toward the 3490 zone.
+🔻 On the other hand, if gold fails to break resistance and retraces below 3290 again, we may see a move back to 3250 and possibly the 3200 region.""",
+    }))
