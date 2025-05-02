@@ -177,4 +177,4 @@ cython_debug/
 .serverless/
 node_modules/
 
-.DS_STORE
+.DS_STOREsession.session-journal
