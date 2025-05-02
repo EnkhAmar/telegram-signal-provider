@@ -205,107 +205,107 @@ class Regex:
     def delete_pair_group(self) -> int:
         return self._delete_pair['group']
 
-CHANNELS = [
-    {
-        'id': 1830404615,
-        'name': 'MetaBear',
-        'link': 'https://t.me/+jg4d5Up8Fkg2YjJl',
-        'regex': {
-            'pair': {
-                'pattern': f"^🔥🐻(.+?)\s+({SELL}|{BUY})\s*(.+?|)🐻🔥\n",
-                'group': 1,
-            },
-            'order': {
-                'pattern': f"^🔥🐻(.+?)\s+({SELL}|{BUY})\s*(.+?|)🐻🔥\n",
-                'group': 2,
-            },
-            'order_type': {
-                'pattern': f"^🔥🐻(.+?)\s+({SELL}|{BUY})\s*(.+?|)🐻🔥\n",
-                'group': 3,
-            },
-            'entry': {
-                'pattern': f"🔰ENTRY:\s+({Regex.INT_OR_FLOAT})\n",
-                'group': 1,
-            },
-            'sl': {
-                'pattern': f"SL:\s+({Regex.INT_OR_FLOAT})\n",
-                'group': 1,
-            },
-            'tp': {
-                'pattern': f"TP:\s+({Regex.INT_OR_FLOAT})\n",
-                'group': 1,
-            },
-            'close_pair': {
-                'pattern': f'🔵🤑([A-Z|a-z]+)\s+([A-Z]{4,6})\s+(.+?\d+\.?\d+) PIPS!',
-                'group': 2,
-            },
-            'edit_pair': {
-                'pattern': str(None),
-                'group': 0,
-            },
-            'edit_order': {
-                'pattern': f'✅(PUT)\s+(SL|TP)\s+IN:\s+({Regex.INT_OR_FLOAT})',
-                'group': 2,
-            },
-            'edit_position': {
-                'pattern': f'✅(PUT)\s+(SL|TP)\s+IN:\s+({Regex.INT_OR_FLOAT})',
-                'group': 3,
-            },
-            'delete_pair': {
-                'pattern': str(None),
-                'group': 0,
-            }
-        }
-    },
-    {
-        'id': 1602291705,
-        'name': 'WFX',
-        'link': 'https://t.me/wfxtestt',
-        'regex': {
-            'pair': {
-                'pattern': f'^([A-Z|a-z]{{4,6}})\s({SELL}|{BUY})\s({ORDER_TYPE}|)\s(@|)(\s|)(\d+\.?\d+)\n',
-                'group': 1,
-            },
-            'order': {
-                'pattern': f'^([A-Z|a-z]{{4,6}})\s({SELL}|{BUY})\s({ORDER_TYPE}|)\s(@|)(\s|)(\d+\.?\d+)\n',
-                'group': 2,
-            },
-            'order_type': {
-                'pattern': f'^([A-Z|a-z]{{4,6}})\s({SELL}|{BUY})\s({ORDER_TYPE}|)\s(@|)(\s|)(\d+\.?\d+)\n',
-                'group': 3,
-            },
-            'entry': {
-                'pattern': f'^([A-Z|a-z]{{4,6}})\s({SELL}|{BUY})\s({ORDER_TYPE}|)\s(@|)(\s|)(\d+\.?\d+)\n',
-                'group': 6,
-            },
-            'sl': {
-                'pattern': f'(sl|SL|Sl)(\s+(@|)(\s|))(\d+\.?\d+)',
-                'group': 5,
-            },
-            'tp': {
-                'pattern': f'(tp|TP|Tp)(\s+(@|)(\s|))(\d+\.?\d+)',
-                'group': 5,
-            },
-            'close_pair': {
-                'pattern': f'([A-Z]{{4,6}})',
-                'group': 1,
-            },
-            'edit_pair': {
-                'pattern': f'([A-Z]{{4,6}})\s+({STOP_LOSS}|{TAKE_PROFIT})\s+({EDIT})\s+(\d+\.?\d+)',
-                'group': 1,
-            },
-            'edit_order': {
-                'pattern': f'([A-Z]{{4,6}})\s+({STOP_LOSS}|{TAKE_PROFIT})\s+({EDIT})\s+(\d+\.?\d+)',
-                'group': 2,
-            },
-            'edit_position': {
-                'pattern': f'([A-Z]{{4,6}})\s+({STOP_LOSS}|{TAKE_PROFIT})\s+({EDIT})\s+(\d+\.?\d+)',
-                'group': 4,
-            },
-            'delete_pair': {
-                'pattern': f'',
-                'group': 0,
-            }
-        }
-    },
-]
+# CHANNELS = [
+#     {
+#         'id': 1830404615,
+#         'name': 'MetaBear',
+#         'link': 'https://t.me/+jg4d5Up8Fkg2YjJl',
+#         'regex': {
+#             'pair': {
+#                 'pattern': f"^🔥🐻(.+?)\s+({SELL}|{BUY})\s*(.+?|)🐻🔥\n",
+#                 'group': 1,
+#             },
+#             'order': {
+#                 'pattern': f"^🔥🐻(.+?)\s+({SELL}|{BUY})\s*(.+?|)🐻🔥\n",
+#                 'group': 2,
+#             },
+#             'order_type': {
+#                 'pattern': f"^🔥🐻(.+?)\s+({SELL}|{BUY})\s*(.+?|)🐻🔥\n",
+#                 'group': 3,
+#             },
+#             'entry': {
+#                 'pattern': f"🔰ENTRY:\s+({Regex.INT_OR_FLOAT})\n",
+#                 'group': 1,
+#             },
+#             'sl': {
+#                 'pattern': f"SL:\s+({Regex.INT_OR_FLOAT})\n",
+#                 'group': 1,
+#             },
+#             'tp': {
+#                 'pattern': f"TP:\s+({Regex.INT_OR_FLOAT})\n",
+#                 'group': 1,
+#             },
+#             'close_pair': {
+#                 'pattern': f'🔵🤑([A-Z|a-z]+)\s+([A-Z]{4,6})\s+(.+?\d+\.?\d+) PIPS!',
+#                 'group': 2,
+#             },
+#             'edit_pair': {
+#                 'pattern': str(None),
+#                 'group': 0,
+#             },
+#             'edit_order': {
+#                 'pattern': f'✅(PUT)\s+(SL|TP)\s+IN:\s+({Regex.INT_OR_FLOAT})',
+#                 'group': 2,
+#             },
+#             'edit_position': {
+#                 'pattern': f'✅(PUT)\s+(SL|TP)\s+IN:\s+({Regex.INT_OR_FLOAT})',
+#                 'group': 3,
+#             },
+#             'delete_pair': {
+#                 'pattern': str(None),
+#                 'group': 0,
+#             }
+#         }
+#     },
+#     {
+#         'id': 1602291705,
+#         'name': 'WFX',
+#         'link': 'https://t.me/wfxtestt',
+#         'regex': {
+#             'pair': {
+#                 'pattern': f'^([A-Z|a-z]{{4,6}})\s({SELL}|{BUY})\s({ORDER_TYPE}|)\s(@|)(\s|)(\d+\.?\d+)\n',
+#                 'group': 1,
+#             },
+#             'order': {
+#                 'pattern': f'^([A-Z|a-z]{{4,6}})\s({SELL}|{BUY})\s({ORDER_TYPE}|)\s(@|)(\s|)(\d+\.?\d+)\n',
+#                 'group': 2,
+#             },
+#             'order_type': {
+#                 'pattern': f'^([A-Z|a-z]{{4,6}})\s({SELL}|{BUY})\s({ORDER_TYPE}|)\s(@|)(\s|)(\d+\.?\d+)\n',
+#                 'group': 3,
+#             },
+#             'entry': {
+#                 'pattern': f'^([A-Z|a-z]{{4,6}})\s({SELL}|{BUY})\s({ORDER_TYPE}|)\s(@|)(\s|)(\d+\.?\d+)\n',
+#                 'group': 6,
+#             },
+#             'sl': {
+#                 'pattern': f'(sl|SL|Sl)(\s+(@|)(\s|))(\d+\.?\d+)',
+#                 'group': 5,
+#             },
+#             'tp': {
+#                 'pattern': f'(tp|TP|Tp)(\s+(@|)(\s|))(\d+\.?\d+)',
+#                 'group': 5,
+#             },
+#             'close_pair': {
+#                 'pattern': f'([A-Z]{{4,6}})',
+#                 'group': 1,
+#             },
+#             'edit_pair': {
+#                 'pattern': f'([A-Z]{{4,6}})\s+({STOP_LOSS}|{TAKE_PROFIT})\s+({EDIT})\s+(\d+\.?\d+)',
+#                 'group': 1,
+#             },
+#             'edit_order': {
+#                 'pattern': f'([A-Z]{{4,6}})\s+({STOP_LOSS}|{TAKE_PROFIT})\s+({EDIT})\s+(\d+\.?\d+)',
+#                 'group': 2,
+#             },
+#             'edit_position': {
+#                 'pattern': f'([A-Z]{{4,6}})\s+({STOP_LOSS}|{TAKE_PROFIT})\s+({EDIT})\s+(\d+\.?\d+)',
+#                 'group': 4,
+#             },
+#             'delete_pair': {
+#                 'pattern': f'',
+#                 'group': 0,
+#             }
+#         }
+#     },
+# ]
