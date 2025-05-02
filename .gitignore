@@ -174,7 +174,8 @@ cython_debug/
 .pypirc
 
 *.session
+*.session-journal
 .serverless/
 node_modules/
 
-.DS_STOREsession.session-journal
+.DS_STORE
