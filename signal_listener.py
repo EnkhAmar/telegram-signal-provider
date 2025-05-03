@@ -35,6 +35,9 @@ async def new_message_handler(event):
         # print("message_date=: \n", event.message.date)
         print("reply_to=: \n", event.reply_to.reply_to_msg_id if event.reply_to else None)
         reply_msg_id = event.reply_to.reply_to_msg_id if event.reply_to else None
+        # msg_text = event.message.message if event.mes
+        event.message
+        
         body={
             "chat_id": event.chat_id,
             "msg_id": event.message.id,
@@ -56,13 +59,29 @@ async def new_message_handler(event):
 
 
 # Register the handler for edited messages
-# @client.on(events.MessageEdited(chats=from_channels))
-# async def edited_message_handler(event):
-#     try:
-#         await client.forward_messages(to_channel, event.message)
-#         print(f"Forwarded edited message from {event.chat_id} to {to_channel}")
-#     except Exception as e:
-#         print(f"Failed to forward edited message: {e}")
+@client.on(events.MessageEdited(chats=from_chat_ids))
+async def edited_message_handler(event):
+    try:
+        print("EDIT EVENT: \n", event)
+        reply_msg_id = event.reply_to.reply_to_msg_id if event.reply_to else None
+        body={
+            "chat_id": event.chat_id,
+            "msg_id": event.message.id,
+            "msg_date": event.message.date.isoformat(),
+            "msg_text": event.message.message,
+            "reply_msg_id": reply_msg_id,
+            "msg_type": "EDITED", # "NEW|EDITED"
+        }
+        print("body to sent to sqs ", body)
+        sqs_client.send_message(
+            QueueUrl="https://sqs.ap-northeast-2.amazonaws.com/549378813718/tg_msg_queue.fifo",
+            MessageBody=json.dumps(body),
+            MessageGroupId=f'queue-{event.chat_id}',
+        )
+
+        # print(f"Forwarded edited message from {event.chat_id} to {to_channel}")
+    except Exception as e:
+        print(f"Failed to forward edited message: {e}")
 
 
 if __name__ == "__main__":

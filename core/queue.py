@@ -31,17 +31,39 @@ def handler(event, context):
             print("RAW MSG -- \n", message, "\n")
             print("RESULT -- \n", result, "\n")
 
-            dynamodb.put_item(
+            prev_msg = dynamodb.get_item(
                 TableName="telegram_msgs",
-                Item=json_util.dumps({
-                    "chat_id": chat_id,
-                    "msg_id": msg_id,
-                    "reply_msg_id": reply_msg_id,
-                    "text": msg_text,
-                    "action": result["action"],
-                    "created_at": msg_date,
-                }, True)
-            )
+                Key={"chat_id": {"S": chat_id}, "msg_id": {"S": msg_id}},
+            ).get("Item", None)
+
+            if msg_type == "NEW":
+                dynamodb.put_item(
+                    TableName="telegram_msgs",
+                    Item=json_util.dumps({
+                        "chat_id": chat_id,
+                        "msg_id": msg_id,
+                        "reply_msg_id": reply_msg_id,
+                        "text": msg_text,
+                        "action": result["action"],
+                        "created_at": msg_date,
+                    }, True)
+                )
+            elif msg_type == "EDITED":
+                dynamodb.update_item(
+                    TableName="telegram_msgs",
+                    Key={"chat_id": {"S": chat_id}, "msg_id": {"S": msg_id}},
+                    UpdateExpression="SET #text = :text, #action = :action, #updated_at = :updated_at",
+                    ExpressionAttributeNames={
+                        "#text": "text",
+                        "#action": "action",
+                        "#updated_at": "updated_at",
+                    },
+                    ExpressionAttributeValues=json_util.dumps({
+                        ":text": msg_text,
+                        ":action": result["action"],
+                        ":updated_at": msg_date,
+                    }, True),
+                )
 
             if result['action'] == 'OTHER':
                 return
@@ -89,6 +111,7 @@ def handler(event, context):
 
 
             if result['action'] in ["TP_HIT", "SL_HIT", "NEW_SIGNAL"]:
+                if prev_msg and prev_msg['action'] == 'OTHER':
                 response = telegram_bot.send_message(
                     chat_id=TO_CHANNEL_ID,
                     text=message,
