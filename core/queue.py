@@ -8,15 +8,10 @@ import utils
 processor = ForexSignalProcessor()
 telegram_bot = Telegram(token=TG_SIGNAL_BOT_TOKEN)
 
-# handle sqs duplicate message
-##
 def handler(event, context):
-    # Loop through the records in the event
     for record in event['Records']:
-        # The message body is stored in the 'body' key
         message_body = record['body']
         
-        # Parse the message body as JSON
         try:
             message = json.loads(message_body)
             
@@ -76,7 +71,6 @@ def handler(event, context):
                         "order_id": result["order_id"],
                         "status": "PENDING",
                         "chat_id": chat_id,
-
                         "pair": result["pair"],
                         "side": result["side"],
                         "type": result["type"],
@@ -90,7 +84,18 @@ def handler(event, context):
                     }, True)
                 )
                 message = telegram_bot.make_entry_message(result)
+
             elif result['action'] in ['TP_HIT', 'SL_HIT']:
+                # Check if already updated to TP_HIT or SL_HIT
+                existing_order = json_util.loads(dynamodb.get_item(
+                    TableName="orders",
+                    Key={"order_id": {"S": result["order_id"]}},
+                ).get("Item", None), True)
+
+                if existing_order and existing_order["status"] in ["TP_HIT", "SL_HIT"]:
+                    print(f"Order {result['order_id']} already marked as {existing_order['status']['S']}. Skipping.")
+                    return
+
                 update_res = dynamodb.update_item(
                     TableName="orders",
                     Key={"order_id": {"S": result["order_id"]}},
@@ -106,31 +111,30 @@ def handler(event, context):
                     ReturnValues="ALL_NEW",
                 )
                 print("update_res : ", update_res)
-                to_reply_id = json_util.loads(update_res["Attributes"], True)["to_msg_id"]
+                to_reply_id = json_util.loads(update_res["Attributes"], True).get("to_msg_id")
                 message = telegram_bot.make_tp_message(result) if result['action'] == 'TP_HIT' else telegram_bot.make_sl_message(result)
 
+            # Send the message (NEW_SIGNAL always allowed, TP_HIT/SL_HIT only if not already sent)
+            response = telegram_bot.send_message(
+                chat_id=TO_CHANNEL_ID,
+                text=message,
+                reply_id=to_reply_id,
+            )
+            print("response ", response)
 
-            if result['action'] in ["TP_HIT", "SL_HIT", "NEW_SIGNAL"]:
-                if prev_msg and prev_msg['action'] == 'OTHER':
-                response = telegram_bot.send_message(
-                    chat_id=TO_CHANNEL_ID,
-                    text=message,
-                    reply_id=to_reply_id,
+            # Save the target message ID for reply mapping
+            if response['ok'] and result['action'] == 'NEW_SIGNAL':
+                to_msg_id = response['result']['message_id']
+                dynamodb.update_item(
+                    TableName="orders",
+                    Key={"order_id": {"S": result["order_id"]}},
+                    UpdateExpression="SET to_chat_id = :to_chat_id, to_msg_id = :to_msg_id",
+                    ExpressionAttributeValues=json_util.dumps({
+                        ":to_chat_id": TO_CHANNEL_ID,
+                        ":to_msg_id": to_msg_id,
+                    }, True)
                 )
-                print("response ", response)
-                if response['ok'] and result['action'] == 'NEW_SIGNAL':
-                    to_msg_id = response['result']['message_id']
-                    dynamodb.update_item(
-                        TableName="orders",
-                        Key={"order_id": {"S": result["order_id"]}},
-                        UpdateExpression="SET to_chat_id = :to_chat_id, to_msg_id = :to_msg_id",
-                        ExpressionAttributeValues=json_util.dumps({
-                            ":to_chat_id": TO_CHANNEL_ID,
-                            ":to_msg_id": to_msg_id,
-                        }, True)
-                    )
 
-            
         except json.JSONDecodeError as e:
             print(f"Failed to decode message body: {message_body} due to {str(e)}")
             continue
@@ -146,8 +150,6 @@ def handler(event, context):
 
 
 def dead_letter_handler(event, context):
-    # Loop through the records in the event
     for record in event['Records']:
-        # The message body is stored in the 'body' key
         message_body = record['body']
         print("Dead message body : ", message_body)
