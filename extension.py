@@ -9,6 +9,8 @@ AWS_SECRET_KEY = getenv("MY_AWS_SECRET_KEY")
 AWS_REGION = getenv("MY_AWS_REGION")
 TG_SIGNAL_BOT_TOKEN = getenv("TG_SIGNAL_BOT_TOKEN")
 TO_CHANNEL_ID = getenv("TO_CHANNEL_ID")
+TO_CHANNEL_FOREX = getenv("TO_CHANNEL_FOREX")
+TO_CHANNEL_CRYPTO = getenv("TO_CHANNEL_CRYPTO")
 
 dynamodb = boto3.client('dynamodb', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY, region_name=AWS_REGION)
 sqs_client = boto3.client("sqs", aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY, region_name=AWS_REGION)
@@ -64,6 +66,14 @@ class Telegram:
         #     message += f"SL hit @ {data['exit_price']}\n\n"
         
         # message += "💸💸💸 Plus-Mongolia-Signal 💰💰💰"
+        return message
+    
+    def make_cancel_message(self, data):
+        message = (f"➕Энэ арилжаа цуцлагдсан. (0.00% Aшиг/Aлдагдал)"
+                   f"➡️Арилжаанд орох ханшинд хүрэхээс өмнө SL цохьсон байна. "
+                   f"💸💸💸 Plus-Mongolia-Signal 💰💰💰"
+        )
+
         return message
 
 

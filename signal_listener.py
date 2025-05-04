@@ -16,6 +16,7 @@ to_channel = int(os.getenv("TO_CHANNEL_ID"))
 from_channels = json_util.loads(dynamodb.scan(
     TableName="signal_channels",
 ).get("Items", []))
+print("from_channels", from_channels)
 from_chat_ids = [channel['chat_id'] for channel in from_channels]
 print("from_chat_ids: ", from_chat_ids)
 
@@ -35,8 +36,7 @@ async def new_message_handler(event):
         # print("message_date=: \n", event.message.date)
         print("reply_to=: \n", event.reply_to.reply_to_msg_id if event.reply_to else None)
         reply_msg_id = event.reply_to.reply_to_msg_id if event.reply_to else None
-        # msg_text = event.message.message if event.mes
-        event.message
+        signal_type = next(filter(lambda c: c['chat_id'] == event.chat_id, from_channels))['signal_type']
         
         body={
             "chat_id": event.chat_id,
@@ -45,6 +45,7 @@ async def new_message_handler(event):
             "msg_text": event.message.message,
             "reply_msg_id": reply_msg_id,
             "msg_type": "NEW", # "NEW|EDITED"
+            "signal_type": signal_type,
         }
         print("body to sent to sqs ", body)
         sqs_client.send_message(
@@ -64,6 +65,7 @@ async def edited_message_handler(event):
     try:
         print("EDIT EVENT: \n", event)
         reply_msg_id = event.reply_to.reply_to_msg_id if event.reply_to else None
+        signal_type = next(filter(lambda c: c['chat_id'] == event.chat_id, from_channels))['signal_type']
         body={
             "chat_id": event.chat_id,
             "msg_id": event.message.id,
@@ -71,6 +73,7 @@ async def edited_message_handler(event):
             "msg_text": event.message.message,
             "reply_msg_id": reply_msg_id,
             "msg_type": "EDITED", # "NEW|EDITED"
+            "signal_type": signal_type,
         }
         print("body to sent to sqs ", body)
         sqs_client.send_message(

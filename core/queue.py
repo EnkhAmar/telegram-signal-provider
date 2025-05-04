@@ -2,7 +2,7 @@ import json
 from dynamodb_json import json_util
 import traceback
 from classifiers import ForexSignalProcessor
-from extension import dynamodb, TO_CHANNEL_ID, Telegram, TG_SIGNAL_BOT_TOKEN
+from extension import dynamodb, TO_CHANNEL_FOREX, TO_CHANNEL_CRYPTO, Telegram, TG_SIGNAL_BOT_TOKEN
 import utils
 
 processor = ForexSignalProcessor()
@@ -22,6 +22,8 @@ def handler(event, context):
             msg_text = message['msg_text']
             reply_msg_id = message['reply_msg_id']
             msg_type = message.get("msg_type", "NEW")
+            signal_type = message['signal_type']
+            TO_CHANNEL_ID = TO_CHANNEL_FOREX if signal_type == "forex" else TO_CHANNEL_CRYPTO
             prev_msg = None
 
             result = processor.process_message(message)
@@ -88,7 +90,7 @@ def handler(event, context):
                     }, True)
                 )
                 message = telegram_bot.make_entry_message(result)
-            elif result['action'] in ['TP_HIT', 'SL_HIT']:
+            elif result['action'] in ['TP_HIT', 'SL_HIT', 'CANCELLED']:
                 update_res = dynamodb.update_item(
                     TableName="orders",
                     Key={"order_id": {"S": result["order_id"]}},
@@ -105,7 +107,12 @@ def handler(event, context):
                 )
                 print("update_res : ", update_res)
                 to_reply_id = json_util.loads(update_res["Attributes"], True)["to_msg_id"]
-                message = telegram_bot.make_tp_message(result) if result['action'] == 'TP_HIT' else telegram_bot.make_sl_message(result)
+                if result['action'] == 'TP_HIT':
+                    message = telegram_bot.make_tp_message(result)
+                elif result['action'] == 'SL_HIT':
+                    message = telegram_bot.make_sl_message(result)
+                elif result['action'] == 'CANCELLED':
+                    message = telegram_bot.make_cancel_message(result)
 
 
             should_send = False
@@ -117,6 +124,8 @@ def handler(event, context):
                 else:
                     # No previous message, safe to send
                     should_send = True
+            elif result['action'] == "CANCELLED":
+                should_send = True
 
             if should_send:
                 response = telegram_bot.send_message(

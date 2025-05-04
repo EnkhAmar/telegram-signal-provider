@@ -63,7 +63,7 @@ class WolfCryptoClassifier:
         """Generate order ID using reply_msg_id for TP/SL hits if available."""
         if action in ["OTHER"]:
             return None
-        if action in ["TP_HIT", "SL_HIT"] and msg.get("reply_msg_id"):
+        if action in ["TP_HIT", "SL_HIT", "CANCELLED"] and msg.get("reply_msg_id"):
             return f"{msg['chat_id']}_{msg['reply_msg_id']}"
         return f"{msg['chat_id']}_{msg['msg_id']}"
 
@@ -99,7 +99,10 @@ class WolfCryptoClassifier:
         text_lower = text.lower()
         return (
             "cancelled" in text_lower or
-            bool(re.search(r"#\w+/USDT\s+Manually\s+Cancelled", text))
+            "considered as null" in text_lower or
+            "didn’t reach the entry zone" in text_lower or
+            "didn't reach the entry zone" in text_lower or
+            bool(re.search(r"#\w+/USDT\s+Manually\s+Cancelled", text, re.IGNORECASE))
         )
 
     def _is_new_signal(self, text: str) -> bool:
@@ -371,6 +374,30 @@ Staying focused — the real opportunity is coming soon.
 •We have a long week ahead, so be patient. New signals are coming really soon family.
 
 Wolfxsignals Team"""
+        },
+        {
+            "chat_id": -100123,
+            "msg_id": 105,
+            "reply_msg_id": 1000,
+            "msg_text": """💚💚💚💚💚💚💚💚💚💚💚💚
+
+✅LINK/USDT will be considered as NULL. (0.00% PROFIT) 🟢
+
+——————————————————
+➡️LINK didn’t reach the Entry Zone (14.439-14.460) before its value went over the SL value.
+
+📌 REMEMBER: You have to enter the signal in the entry zone we indicate. We post signals at a price between the Entry Zone and the Stop Loss point.
+
+🥳 Guide: wolfxsignals.com/guides
+
+——————————————————
+⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+
+⚜️QUESTION: Where to follow our Crypto Signals? 👉 {HERE}
+
+✅ EXCLUSIVE ACADEMY + ACCOUNT MANAGEMENT OFFER IN OUR WEBSITE!
+
+✉️ DOUBTS: @WOLFX_SIGNALS"""
         }
     ]
 

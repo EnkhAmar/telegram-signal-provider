@@ -16,7 +16,7 @@ with TelegramClient(session_name, api_id, api_hash) as client:
     # source = client.get_entity(source_chat_id)
     # print("Source : ", source)
 
-    messages = client.get_messages(source_chat_id, limit=20)
+    messages = reversed(client.get_messages(source_chat_id, limit=20))
     for message in messages:
         print("\n\n", "==="*50)
         print(f"{message.id}: {message.text or '[Non-text message]'}")
