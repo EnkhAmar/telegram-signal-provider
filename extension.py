@@ -35,7 +35,8 @@ class Telegram:
         leverage_line = f"\n\n〽️Хөшүүрэг {data['leverage']}х" if 'leverage' in data else ""
 
         message = (
-            f"{data['pair']} {side_emoji}{data['side']} @ <code>{data['entry']}</code>\n\n"
+            f"<b>{data['pair']}</b> {side_emoji}{data['side']}\n\n"
+            f"Орох цэг: <code>{data['entry']}</code>\n\n"
             f"{tp_lines}\n"
             f"🚫SL {data['stop_loss']}"
             f"{leverage_line}\n\n"
