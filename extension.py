@@ -31,10 +31,14 @@ class Telegram:
         side_emoji = "📈" if data['side'] == 'BUY' else "📉"
         tp_lines = "\n".join([f"💰TP{idx+1} {tp}" for idx, tp in enumerate(data['take_profit'])])
         
+        # Optional leverage line
+        leverage_line = f"\n\n〽️Хөшүүрэг {data['leverage']}х" if 'leverage' in data else ""
+
         message = (
-            f"{data['pair']}  {data['entry']} {data['side']}\n\n"
+            f"{data['pair']} {side_emoji}{data['side']} @ <code>{data['entry']}</code>\n\n"
             f"{tp_lines}\n"
-            f"🚫SL {data['stop_loss']}\n\n"
+            f"🚫SL {data['stop_loss']}"
+            f"{leverage_line}\n\n"
             "❗️Арилжаанд орох хамгийн дээд ханшнаас дээгүүр орсон тохиолдолд энэхүү арилжаа нь манай сувгийн signal-тай нийцэхгүй.\n\n"
             "💸💸💸 Plus-Mongolia-Signal 💰💰💰"
         )
@@ -69,8 +73,8 @@ class Telegram:
         return message
     
     def make_cancel_message(self, data):
-        message = (f"➕Энэ арилжаа цуцлагдсан. (0.00% Aшиг/Aлдагдал)"
-                   f"➡️Арилжаанд орох ханшинд хүрэхээс өмнө SL цохьсон байна. "
+        message = (f"➕Энэ арилжаа цуцлагдсан. (0.00% Aшиг/Aлдагдал)\n\n"
+                   f"➡️Арилжаанд орох ханшинд хүрэхээс өмнө SL цохьсон байна.\n\n"
                    f"💸💸💸 Plus-Mongolia-Signal 💰💰💰"
         )
 
