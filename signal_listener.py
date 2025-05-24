@@ -87,6 +87,31 @@ async def edited_message_handler(event):
         print(f"Failed to forward edited message: {e}")
 
 
+@client.on(events.MessageDeleted(chats=from_chat_ids))
+async def deleted_message_handler(event):
+    try:
+        print("DELETE EVENT: \n", event)
+        reply_msg_id = event.reply_to.reply_to_msg_id if event.reply_to else None
+        signal_type = next(filter(lambda c: c['chat_id'] == event.chat_id, from_channels))['signal_type']
+        body={
+            "chat_id": event.chat_id,
+            "msg_id": event.message.id,
+            "msg_date": event.message.date.isoformat(),
+            "msg_text": event.message.message,
+            "reply_msg_id": reply_msg_id,
+            "msg_type": "DELETED", # "NEW|EDITED|DELETED"
+            "signal_type": signal_type,
+        }
+        print("body to sent to sqs ", body)
+        # sqs_client.send_message(
+        #     QueueUrl="https://sqs.ap-northeast-2.amazonaws.com/549378813718/tg_msg_queue.fifo",
+        #     MessageBody=json.dumps(body),
+        #     MessageGroupId=f'queue-{event.chat_id}',
+        # )
+    except Exception as e:
+        print(f"Failed to forward deleted message: {e}")
+
+
 if __name__ == "__main__":
     client.start()
     print("Userbot is running...")
