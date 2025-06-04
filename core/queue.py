@@ -24,6 +24,9 @@ def handler(event, context):
             msg_type = message.get("msg_type", "NEW")
             signal_type = message['signal_type']
             TO_CHANNEL_ID = TO_CHANNEL_FOREX if signal_type == "forex" else TO_CHANNEL_CRYPTO
+            if chat_id in [-1002643902459]:
+                TO_CHANNEL_ID = -1002665107295
+                
             prev_msg = None
 
             result = processor.process_message(message)
@@ -87,6 +90,7 @@ def handler(event, context):
                         "pnl": 0,
                         "created_at": msg_date,
                         "updated_at": "",
+                        "extracted": result,
                     }, True)
                 )
                 message = telegram_bot.make_entry_message(result)

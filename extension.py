@@ -29,14 +29,36 @@ class Telegram:
     
     def make_entry_message(self, data):
         side_emoji = "📈" if data['side'] == 'BUY' else "📉"
-        tp_lines = "\n".join([f"💰TP{idx+1} {tp}" for idx, tp in enumerate(data['take_profit'])])
+
+        # Handle TP display - single line if only one TP
+        if len(data['take_profit']) == 1:
+            tp_lines = f"💰TP {data['take_profit'][0]}"
+        else:
+            tp_lines = "\n".join([f"💰TP{idx+1} {tp}" for idx, tp in enumerate(data['take_profit'])])
         
         # Optional leverage line
         leverage_line = f"\n\n〽️Хөшүүрэг {data['leverage']}х" if 'leverage' in data else ""
 
+        # Add timeframe if exists
+        timeframe_line = f"\n⏰ Хугацааны интервал: {data['timeframe']}" if 'timeframe' in data else ""
+        
+        # Add order type if exists (for -1002643902459 chat_id)
+        order_type_line = ""
+        if data.get('chat_id') == -1002643902459 and 'type' in data:
+            type_mapping = {
+                'BUY_LIMIT': 'BUY LIMIT',
+                'SELL_LIMIT': 'SELL LIMIT',
+                'BUY_STOP': 'BUY STOP',
+                'SELL_STOP': 'SELL STOP',
+                'MARKET': 'MARKET',
+            }
+            order_type_line = f"\n🔹 Type: {type_mapping.get(data['type'], data['type'])}"
+
         message = (
             f"<b>{data['pair']}</b> {side_emoji}{data['side']}\n\n"
-            f"Орох цэг: <code>{data['entry']}</code>\n\n"
+            f"Орох цэг: <code>{data['entry']}</code>"
+            f"{timeframe_line}"
+            f"{order_type_line}\n\n"
             f"{tp_lines}\n"
             f"🚫SL {data['stop_loss']}"
             f"{leverage_line}\n\n"
