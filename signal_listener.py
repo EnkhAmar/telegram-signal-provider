@@ -17,7 +17,7 @@ from_channels = json_util.loads(dynamodb.scan(
     TableName="signal_channels",
 ).get("Items", []))
 print("from_channels", from_channels)
-from_chat_ids = [channel['chat_id'] for channel in from_channels]
+from_chat_ids = [channel['chat_id'] for channel in from_channels if channel.get('status') == 'ACTIVE']
 print("from_chat_ids: ", from_chat_ids)
 
 # Initialize the Telegram client
