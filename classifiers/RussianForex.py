@@ -14,10 +14,10 @@ class RussianForexClassifier:
         # Entry pattern for various order types
         self.entry_pattern = re.compile(
             r'(?P<order_type>BuyStop|SellStop|BuyLimit|SellLimit)\s*'
-            r'#(?P<pair>[A-Z]{6})\s*\((?P<timeframe>[a-z0-9]+)\)\s*.*?\n'
-            r'Price:\s*(?P<entry>\d+\.\d+)\n'
-            r'SL:\s*(?P<sl>\d+\.\d+)\n'
-            r'TP:\s*(?P<tp>\d+\.\d+)',
+            r'#(?P<pair>[A-Za-z]+\d*)\s*\((?P<timeframe>[a-z0-9]+)\)\s*.*?\n'
+            r'Price:\s*(?P<entry>[\d,]+\.\d+|[\d,]+)\n'
+            r'SL:\s*(?P<sl>[\d,]+\.\d+|[\d,]+)\n'
+            r'TP:\s*(?P<tp>[\d,]+\.\d+|[\d,]+)',
             re.IGNORECASE
         )
         
@@ -99,10 +99,10 @@ class RussianForexClassifier:
         # More flexible pattern to handle variations in the format
         pattern = re.compile(
             r'(?P<order_type>BuyStop|SellStop|BuyLimit|SellLimit)\s*'
-            r'#(?P<pair>[A-Z]{6})\s*\((?P<timeframe>[a-z0-9]+)\)[^\n]*\n'
-            r'(?:.*\n)?.*Price:\s*(?P<entry>\d+\.\d+)\s*\n'
-            r'.*SL:\s*(?P<sl>\d+\.\d+)\s*\n'
-            r'.*TP:\s*(?P<tp>\d+\.\d+)',
+            r'#(?P<pair>[A-Za-z]+\d*)\s*\((?P<timeframe>[a-z0-9]+)\)[^\n]*\n'
+            r'(?:.*\n)?.*Price:\s*(?P<entry>[\d,]+\.\d+|[\d,]+)\s*\n'
+            r'.*SL:\s*(?P<sl>[\d,]+\.\d+|[\d,]+)\s*\n'
+            r'.*TP:\s*(?P<tp>[\d,]+\.\d+|[\d,]+)',
             re.IGNORECASE
         )
         
@@ -242,7 +242,17 @@ SL: 1.89800
 TP: 1.93333
 (FX)""",
             "reply_msg_id": None,
-        }
+        },
+        {
+            "chat_id": -1000,
+            "msg_id": 3,
+            "msg_text": """BuyStop #NaturalGas (h4) ПГиП
+Price: 3784.2
+SL: 3667.8
+TP: 4061.0
+(Commodity)""",
+            "reply_msg_id": None,
+        },
     ]
     
     # Test TP Hit Signals
