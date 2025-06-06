@@ -253,6 +253,8 @@ TP: 4061.0
 (Commodity)""",
             "reply_msg_id": None,
         },
+        {'chat_id': -1001297727353, 'msg_id': 18608, 'msg_date': '2025-06-05T08:54:22+00:00', 'msg_text': 'BuyStop #AUDNZD (D1) ПГиП\nPrice: 1.08881\nSL: 1.07888\nTP: 111885\n(FX)', 'reply_msg_id': None, 'msg_type': 'NEW', 'signal_type': 'forex'},
+        {'chat_id': -1001297727353, 'msg_id': 18612, 'msg_date': '2025-06-05T08:59:05+00:00', 'msg_text': 'SellStop #EURGBP (h4) ГиП\nPrice: 0.84032\nSL: 0.84302\nTP: 0.83652\n(FX)', 'reply_msg_id': None, 'msg_type': 'NEW', 'signal_type': 'forex'} 
     ]
     
     # Test TP Hit Signals
@@ -324,7 +326,9 @@ TP: 4061.0
             "msg_id": 10,
             "msg_text": """Отмена ❌""",
             "reply_msg_id": 1,
-        }
+        },
+        {'chat_id': -1001297727353, 'msg_id': 18610, 'msg_date': '2025-06-05T08:55:43+00:00', 'msg_text': 'Delete ❌\n(Слом паттерна)', 'reply_msg_id': None, 'msg_type': 'NEW', 'signal_type': 'forex'},
+        {'chat_id': -1001297727353, 'msg_id': 18611, 'msg_date': '2025-06-05T08:55:59+00:00', 'msg_text': 'Delete ❌\n(Слом паттерна)', 'reply_msg_id': 18580, 'msg_type': 'NEW', 'signal_type': 'forex'} 
     ]
     
     print("=== Entry Signals ===")
