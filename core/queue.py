@@ -19,12 +19,12 @@ def handler(event, context):
             chat_id = message['chat_id']
             msg_id = message['msg_id']
             msg_date = message['msg_date']
-            msg_text = message['msg_text']
+            msg_text = message.get('msg_text', "")
             reply_msg_id = message['reply_msg_id']
             msg_type = message.get("msg_type", "NEW")
             signal_type = message['signal_type']
             TO_CHANNEL_ID = TO_CHANNEL_FOREX if signal_type == "forex" else TO_CHANNEL_CRYPTO
-            if chat_id in [-1002643902459]:
+            if chat_id in [-1002643902459, -1002587201256]:
                 TO_CHANNEL_ID = -1002665107295
                 
             prev_msg = None
@@ -43,6 +43,7 @@ def handler(event, context):
                         "text": msg_text,
                         "action": result["action"],
                         "created_at": msg_date,
+                        "result": result,
                     }, True)
                 )
             elif msg_type == "EDITED":
@@ -68,7 +69,20 @@ def handler(event, context):
                     }, True),
                 )
             elif msg_type == "DELETED":
-                print("DELETED ", message)
+                prev_msg = json_util.loads(dynamodb.get_item(
+                    TableName="telegram_msgs",
+                    Key=json_util.dumps({"chat_id": chat_id, "msg_id": msg_id}, True),
+                ).get("Item", None), True)
+                print("prev_msg : ", prev_msg)
+                if prev_msg:
+                    prev_order = json_util.loads(dynamodb.get_item(
+                        TableName="orders",
+                        Key=json_util.dumps({
+                            "order_id": prev_msg['result']['order_id']
+                        }, True)
+                    ).get("Item", None), True)
+                    delete_resp = telegram_bot.delete_message(prev_order["to_chat_id"], prev_order["to_msg_id"])
+                    print("delete_resp ", delete_resp)
                 return
 
             if result['action'] == 'OTHER':

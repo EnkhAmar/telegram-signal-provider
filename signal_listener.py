@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from telethon import TelegramClient, events
 from extension import sqs_client, dynamodb
 from dynamodb_json import json_util
+from datetime import datetime, timezone
 
 # Load environment variables
 load_dotenv()
@@ -90,15 +91,15 @@ async def edited_message_handler(event):
 @client.on(events.MessageDeleted(chats=from_chat_ids))
 async def deleted_message_handler(event):
     try:
-        print("DELETE EVENT: \n", event)
-        reply_msg_id = event.reply_to.reply_to_msg_id if event.reply_to else None
+        print("DELETE EVENT: \n", event.stringify())
+        # reply_msg_id = event.reply_to.reply_to_msg_id if event.reply_to else None
         signal_type = next(filter(lambda c: c['chat_id'] == event.chat_id, from_channels))['signal_type']
         body={
             "chat_id": event.chat_id,
-            "msg_id": event.message.id,
-            "msg_date": event.message.date.isoformat(),
-            "msg_text": event.message.message,
-            "reply_msg_id": reply_msg_id,
+            "msg_id": event.deleted_id,
+            "msg_date": datetime.now(timezone.utc).isoformat(),
+            "msg_text": "",
+            "reply_msg_id": None,
             "msg_type": "DELETED", # "NEW|EDITED|DELETED"
             "signal_type": signal_type,
         }

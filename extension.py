@@ -102,6 +102,12 @@ class Telegram:
         )
 
         return message
+    
+    def delete_message(self, chat_id, msg_id):
+        return requests.post(f'https://api.telegram.org/bot{self.token}/deleteMessage', json={
+                'chat_id': chat_id,
+                'message_id': msg_id,
+        }).json()
 
 
 SELL = 'SELL|sell|SHORT|short'
