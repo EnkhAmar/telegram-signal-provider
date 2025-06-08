@@ -11,6 +11,8 @@ TG_SIGNAL_BOT_TOKEN = getenv("TG_SIGNAL_BOT_TOKEN")
 TO_CHANNEL_ID = getenv("TO_CHANNEL_ID")
 TO_CHANNEL_FOREX = getenv("TO_CHANNEL_FOREX")
 TO_CHANNEL_CRYPTO = getenv("TO_CHANNEL_CRYPTO")
+BINANCE_API_KEY = getenv("BINANCE_API_KEY")
+BINANCE_API_SECRET = getenv("BINANCE_API_SECRET")
 
 dynamodb = boto3.client('dynamodb', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY, region_name=AWS_REGION)
 sqs_client = boto3.client("sqs", aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY, region_name=AWS_REGION)

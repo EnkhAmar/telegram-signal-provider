@@ -10,6 +10,7 @@ telegram_bot = Telegram(token=TG_SIGNAL_BOT_TOKEN)
 
 
 def handler(event, context):
+    print("---RECORDS---\n", event['Records'])
     for record in event['Records']:
         message_body = record['body']
         
