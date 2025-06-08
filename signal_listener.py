@@ -103,11 +103,11 @@ async def deleted_message_handler(event):
             "signal_type": signal_type,
         }
         print("body to sent to sqs ", body)
-        # sqs_client.send_message(
-        #     QueueUrl="https://sqs.ap-northeast-2.amazonaws.com/549378813718/tg_msg_queue.fifo",
-        #     MessageBody=json.dumps(body),
-        #     MessageGroupId=f'queue-{event.chat_id}',
-        # )
+        sqs_client.send_message(
+            QueueUrl="https://sqs.ap-northeast-2.amazonaws.com/549378813718/tg_msg_queue.fifo",
+            MessageBody=json.dumps(body),
+            MessageGroupId=f'queue-{event.chat_id}',
+        )
     except Exception as e:
         print(f"Failed to forward deleted message: {e}")
 
