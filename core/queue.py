@@ -67,6 +67,9 @@ def handler(event, context):
                         ":updated_at": msg_date,
                     }, True),
                 )
+            elif msg_type == "DELETED":
+                print("DELETED ", message)
+                return
 
             if result['action'] == 'OTHER':
                 return
