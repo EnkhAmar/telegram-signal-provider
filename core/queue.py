@@ -75,15 +75,15 @@ def handler(event, context):
                     Key=json_util.dumps({"chat_id": chat_id, "msg_id": msg_id}, True),
                 ).get("Item", None), True)
                 print("prev_msg : ", prev_msg)
-                if prev_msg:
-                    prev_order = json_util.loads(dynamodb.get_item(
-                        TableName="orders",
-                        Key=json_util.dumps({
-                            "order_id": prev_msg['result']['order_id']
-                        }, True)
-                    ).get("Item", None), True)
-                    delete_resp = telegram_bot.delete_message(prev_order["to_chat_id"], prev_order["to_msg_id"])
-                    print("delete_resp ", delete_resp)
+                # if prev_msg:
+                #     prev_order = json_util.loads(dynamodb.get_item(
+                #         TableName="orders",
+                #         Key=json_util.dumps({
+                #             "order_id": prev_msg['result']['order_id']
+                #         }, True)
+                #     ).get("Item", None), True)
+                #     delete_resp = telegram_bot.delete_message(prev_order["to_chat_id"], prev_order["to_msg_id"])
+                #     print("delete_resp ", delete_resp)
                 return
 
             if result['action'] == 'OTHER':
