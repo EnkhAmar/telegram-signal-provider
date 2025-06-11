@@ -30,12 +30,12 @@ client = TelegramClient(session_name, api_id, api_hash)
 async def new_message_handler(event):
     try:
         print("EVENT: \n", event)
-        print("message=: \n", event.stringify())
+        # print("message=: \n", event.stringify())
         # print("message=: \n", dir(event))
         # print("channel_id=: \n", event.chat_id)
         # print("message_id=: \n", event.message.id)
         # print("message_date=: \n", event.message.date)
-        print("reply_to=: \n", event.reply_to.reply_to_msg_id if event.reply_to else None)
+        # print("reply_to=: \n", event.reply_to.reply_to_msg_id if event.reply_to else None)
         reply_msg_id = event.reply_to.reply_to_msg_id if event.reply_to else None
         signal_type = next(filter(lambda c: c['chat_id'] == event.chat_id, from_channels))['signal_type']
         
@@ -48,12 +48,13 @@ async def new_message_handler(event):
             "msg_type": "NEW", # "NEW|EDITED"
             "signal_type": signal_type,
         }
-        print("body to sent to sqs ", body)
-        sqs_client.send_message(
+        print("body to sent to sqs = ", body, "\n")
+        sqs_response = sqs_client.send_message(
             QueueUrl="https://sqs.ap-northeast-2.amazonaws.com/549378813718/tg_msg_queue.fifo",
             MessageBody=json.dumps(body),
             MessageGroupId=f'queue-{event.chat_id}',
         )
+        print("sqs_response = ", sqs_response, "\n\n")
         # await client.forward_messages(to_channel, event.message)
         # print(f"Forwarded new message from {event.chat_id} to {to_channel}")
     except Exception as e:
@@ -77,11 +78,12 @@ async def edited_message_handler(event):
             "signal_type": signal_type,
         }
         print("body to sent to sqs ", body)
-        sqs_client.send_message(
+        sqs_response = sqs_client.send_message(
             QueueUrl="https://sqs.ap-northeast-2.amazonaws.com/549378813718/tg_msg_queue.fifo",
             MessageBody=json.dumps(body),
             MessageGroupId=f'queue-{event.chat_id}',
         )
+        print("sqs_response = ", sqs_response, "\n\n")
 
         # print(f"Forwarded edited message from {event.chat_id} to {to_channel}")
     except Exception as e:
@@ -104,11 +106,12 @@ async def deleted_message_handler(event):
             "signal_type": signal_type,
         }
         print("body to sent to sqs ", body)
-        sqs_client.send_message(
+        sqs_response = sqs_client.send_message(
             QueueUrl="https://sqs.ap-northeast-2.amazonaws.com/549378813718/tg_msg_queue.fifo",
             MessageBody=json.dumps(body),
             MessageGroupId=f'queue-{event.chat_id}',
         )
+        print("sqs_response = ", sqs_response, "\n\n")
     except Exception as e:
         print(f"Failed to forward deleted message: {e}")
 
