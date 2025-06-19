@@ -59,7 +59,7 @@ resources:
         QueueName: 'tg_msg_queue.fifo'
         FifoQueue: true
         ContentBasedDeduplication: true
-        VisibilityTimeout: 60
+        VisibilityTimeout: 66
         RedrivePolicy:
           deadLetterTargetArn:
             Fn::GetAtt: [TgMsgFifoDLQ, Arn]

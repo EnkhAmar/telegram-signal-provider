@@ -5,6 +5,7 @@ from telethon import TelegramClient, events
 from extension import sqs_client, dynamodb
 from dynamodb_json import json_util
 from datetime import datetime, timezone
+import uuid
 
 # Load environment variables
 load_dotenv()
@@ -40,6 +41,7 @@ async def new_message_handler(event):
         signal_type = next(filter(lambda c: c['chat_id'] == event.chat_id, from_channels))['signal_type']
         
         body={
+            "uuid": str(uuid.uuid4()),
             "chat_id": event.chat_id,
             "msg_id": event.message.id,
             "msg_date": event.message.date.isoformat(),
