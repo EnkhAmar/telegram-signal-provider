@@ -46,7 +46,7 @@ class Telegram:
         
         # Add order type if exists (for -1002643902459 chat_id)
         order_type_line = ""
-        if data.get('chat_id') == -1002643902459 and 'type' in data:
+        if data.get('chat_id') in [-1002643902459, 1001297727353] and 'type' in data:
             type_mapping = {
                 'BUY_LIMIT': 'BUY LIMIT',
                 'SELL_LIMIT': 'SELL LIMIT',
