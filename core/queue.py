@@ -2,7 +2,7 @@ import json
 from dynamodb_json import json_util
 import traceback
 from classifiers import ForexSignalProcessor
-from extension import dynamodb, TO_CHANNEL_FOREX, TO_CHANNEL_CRYPTO, Telegram, TG_SIGNAL_BOT_TOKEN
+from extension import dynamodb, TO_CHANNEL_FOREX, TO_CHANNEL_CRYPTO, Telegram, TG_SIGNAL_BOT_TOKEN, lambda_client
 import utils
 
 processor = ForexSignalProcessor()
@@ -168,7 +168,13 @@ def handler(event, context):
                         }, True)
                     )
 
-            
+            if chat_id == -1002587201256 and result['action'] == 'NEW_SIGNAL':
+                lambda_client.invoke(
+                    FunctionName="tg-signal-service-prod-BinanceTradeHandler",
+                    InvocationType="Event",
+                    Payload=json.dumps(result),
+                )
+
         except json.JSONDecodeError as e:
             print(f"Failed to decode message body: {message_body} due to {str(e)}")
             continue
