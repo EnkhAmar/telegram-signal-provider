@@ -170,9 +170,10 @@ def handler(event, context):
 
             if chat_id == -1002587201256 and result['action'] == 'NEW_SIGNAL':
                 lambda_client.invoke(
-                    FunctionName="tg-signal-service-prod-BinanceTradeHandler",
+                    # FunctionName="tg-signal-service-prod-BinanceTradeHandler",
+                    FunctionName="binance-trade-handler",
                     InvocationType="Event",
-                    Payload=json.dumps(result),
+                    Payload=json.dumps(result).encode("utf-8"),
                 )
 
         except json.JSONDecodeError as e:

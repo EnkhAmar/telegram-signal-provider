@@ -2,6 +2,7 @@ import json
 # from dynamodb_json import json_util
 from binance import Client
 from binance.enums import *
+from binance.exceptions import BinanceAPIException
 from os import getenv
 from dotenv import load_dotenv
 from typing import TypedDict, Literal, List
@@ -33,9 +34,8 @@ def handler(event, context):
     exchange_info = client.futures_exchange_info()
     account_config = client.futures_account_config()
     account_info = client.futures_account()
-    print("EVENT", event, type(event))
-    return
-    signal: Signal = json.loads(event['body'])
+
+    signal: Signal = event
 
     symbol = signal['pair'].replace("/", "")
 
@@ -71,7 +71,9 @@ def handler(event, context):
             'type': FUTURE_ORDER_TYPE_LIMIT,
             'quantity': quantity,
             'price': round(entry_price, symbol_config['pricePrecision']),
-            'timeInForce': TIME_IN_FORCE_GTC
+            'reduceOnly': 'false',
+            'timeInForce': TIME_IN_FORCE_GTC,
+            # 'workingType': 'MARK_PRICE',
         },
         {
             'symbol': symbol,
@@ -81,7 +83,9 @@ def handler(event, context):
             'stopPrice': round(signal['stop_loss'], symbol_config['pricePrecision']),
             'quantity': quantity,
             'timeInForce': 'GTE_GTC',
+            'priceProtect': 'TRUE',
             'reduceOnly': 'true',
+            'workingType': 'MARK_PRICE',
         },
         {
             'symbol': symbol,
@@ -91,7 +95,9 @@ def handler(event, context):
             'stopPrice': round(take_profits[-2], symbol_config['pricePrecision']),
             'quantity': round(quantity / 2, symbol_config['quantityPrecision']),
             'timeInForce': 'GTE_GTC',
-            'reduceOnly': 'true'
+            'priceProtect': 'TRUE',
+            'reduceOnly': 'true',
+            'workingType': 'MARK_PRICE',
         },
         {
             'symbol': symbol,
@@ -101,11 +107,16 @@ def handler(event, context):
             'stopPrice': round(take_profits[-1], symbol_config['pricePrecision']),
             'quantity': round(quantity / 2, symbol_config['quantityPrecision']),
             'timeInForce': 'GTE_GTC',
-            'reduceOnly': 'true'
+            'priceProtect': 'TRUE',
+            'reduceOnly': 'true',
+            'workingType': 'MARK_PRICE',
         },
     ]
     for order in orders:
-        resp = client.futures_create_order(**order)
-        print("-"*16)
-        print("order = ", order)
-        print("resp = ", resp)
+        try:
+            print("-"*16)
+            print("order = ", order)
+            resp = client.futures_create_order(**order)
+            print("resp = ", resp)
+        except BinanceAPIException as err:
+            print(f"ERROR: {err}")

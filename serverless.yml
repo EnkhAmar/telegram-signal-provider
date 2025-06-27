@@ -46,9 +46,9 @@ functions:
               - Arn
           batchSize: 10
   
-  BinanceTradeHandler:
-    handler: core/trade.handler
-    timeout: 50
+  # BinanceTradeHandler:
+  #   handler: trade.handler
+  #   timeout: 50
 custom:
   accountId: ${self:provider.environment.ACCOUNT_ID}
   prune:
