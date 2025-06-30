@@ -49,6 +49,17 @@ functions:
   # BinanceTradeHandler:
   #   handler: trade.handler
   #   timeout: 50
+
+  connectHandler:
+    handler: core/websocket.connect_handler
+    events:
+      - websocket:
+          route: $connect
+  disconnectHandler:
+    handler: core/websocket.disconnect_handler
+    events:
+      - websocket:
+          route: $disconnect
 custom:
   accountId: ${self:provider.environment.ACCOUNT_ID}
   prune:

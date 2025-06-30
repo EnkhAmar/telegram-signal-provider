@@ -151,3 +151,28 @@ response = dynamodb.create_table(
     TableClass='STANDARD',
     DeletionProtectionEnabled=False
 )
+
+
+# webscoket_connections
+response = dynamodb.create_table(
+    TableName="websocket_connections",
+    AttributeDefinitions=[
+        {
+            'AttributeName': 'connection_id',
+            'AttributeType': 'S'
+        }
+    ],
+    KeySchema=[
+        {            'AttributeName': 'connection_id',
+            'KeyType': 'HASH'
+        }
+    ],
+    BillingMode='PAY_PER_REQUEST',
+    Tags=[
+        {            'Key': 'Description',
+            'Value': 'websocket_connections connection_id'
+        },
+    ],
+    TableClass='STANDARD',
+    DeletionProtectionEnabled=False
+)
