@@ -168,7 +168,7 @@ def handler(event, context):
                         }, True)
                     )
 
-            if chat_id == -1002587201256 and result['action'] == 'NEW_SIGNAL':
+            if chat_id in [-1002587201256, -1001338521686] and result['action'] == 'NEW_SIGNAL':
                 lambda_client.invoke(
                     # FunctionName="tg-signal-service-prod-BinanceTradeHandler",
                     FunctionName="binance-trade-handler",
