@@ -11,7 +11,7 @@ load_dotenv()
 
 BINANCE_API_KEY = getenv("BINANCE_API_KEY")
 BINANCE_API_SECRET = getenv("BINANCE_API_SECRET")
-client = Client(BINANCE_API_KEY, BINANCE_API_SECRET, testnet=True)
+client = Client(BINANCE_API_KEY, BINANCE_API_SECRET, testnet=False)
 
 class Signal(TypedDict):
     chat_id: int
