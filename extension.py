@@ -13,10 +13,13 @@ TO_CHANNEL_FOREX = getenv("TO_CHANNEL_FOREX")
 TO_CHANNEL_CRYPTO = getenv("TO_CHANNEL_CRYPTO")
 BINANCE_API_KEY = getenv("BINANCE_API_KEY")
 BINANCE_API_SECRET = getenv("BINANCE_API_SECRET")
+API_DOMAIN = getenv("API_DOMAIN")
+API_STAGE = getenv("API_STAGE")
 
 dynamodb = boto3.client('dynamodb', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY, region_name=AWS_REGION)
 sqs_client = boto3.client("sqs", aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY, region_name=AWS_REGION)
 lambda_client = boto3.client("lambda", aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY, region_name=AWS_REGION)
+apigw_client = boto3.client("apigatewaymanagementapi", endpoint_url=f"https://{API_DOMAIN}/{API_STAGE}", aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY, region_name=AWS_REGION)
 
 class Telegram:
     def __init__(self, token:str):
@@ -148,7 +151,7 @@ class Status:
     DELETED_BY_USER = 8 
 
 class Regex:
-    INT_OR_FLOAT = '(\d+\.?\d+)'
+    INT_OR_FLOAT = '' # '(\d+\.?\d+)'
 
     def __init__(self, pair, order, entry, stop_loss, take_profit, order_type, close_pair, edit_pair, edit_order, edit_position, delete_pair):
         self._pair = pair

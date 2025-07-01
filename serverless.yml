@@ -4,7 +4,7 @@ frameworkVersion: '4.6.2'
 
 provider:
   name: aws
-  runtime: python3.11
+  runtime: python3.12
   timeout: 29
   stage: ${opt:stage, "dev"}
   region: ${opt:region, "ap-northeast-2"}
@@ -55,11 +55,27 @@ functions:
     events:
       - websocket:
           route: $connect
+
   disconnectHandler:
     handler: core/websocket.disconnect_handler
     events:
       - websocket:
           route: $disconnect
+
+  broadcastMessageHandler:
+    handler: core/websocket.broadcast_message
+
+  messageHandler:
+    handler: core/websocket.message_handler
+    events:
+      - websocket:
+          route: sendMessage
+  
+  pingHandler:
+    handler: core/websocket.ping_handler
+    events:
+      - websocket:
+          route: ping
 custom:
   accountId: ${self:provider.environment.ACCOUNT_ID}
   prune:
