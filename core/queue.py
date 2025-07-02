@@ -74,7 +74,7 @@ def handler(event, context):
                     TableName="telegram_msgs",
                     Key=json_util.dumps({"chat_id": chat_id, "msg_id": msg_id}, True),
                 ).get("Item", None), True)
-                print("prev_msg : ", prev_msg)
+                print("prev_msg to delete : ", prev_msg)
                 # if prev_msg:
                 #     prev_order = json_util.loads(dynamodb.get_item(
                 #         TableName="orders",
