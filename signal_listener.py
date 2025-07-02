@@ -55,6 +55,7 @@ async def new_message_handler(event):
             QueueUrl="https://sqs.ap-northeast-2.amazonaws.com/549378813718/tg_msg_queue.fifo",
             MessageBody=json.dumps(body),
             MessageGroupId=f'queue-{event.chat_id}',
+            MessageDeduplicationId=str(uuid.uuid4()),
         )
         print("sqs_response = ", sqs_response, "\n\n")
         # await client.forward_messages(to_channel, event.message)
@@ -84,6 +85,7 @@ async def edited_message_handler(event):
             QueueUrl="https://sqs.ap-northeast-2.amazonaws.com/549378813718/tg_msg_queue.fifo",
             MessageBody=json.dumps(body),
             MessageGroupId=f'queue-{event.chat_id}',
+            MessageDeduplicationId=str(uuid.uuid4()),
         )
         print("sqs_response = ", sqs_response, "\n\n")
 
@@ -112,6 +114,7 @@ async def deleted_message_handler(event):
             QueueUrl="https://sqs.ap-northeast-2.amazonaws.com/549378813718/tg_msg_queue.fifo",
             MessageBody=json.dumps(body),
             MessageGroupId=f'queue-{event.chat_id}',
+            MessageDeduplicationId=str(uuid.uuid4()),
         )
         print("sqs_response = ", sqs_response, "\n\n")
     except Exception as e:
