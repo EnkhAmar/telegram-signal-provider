@@ -112,7 +112,7 @@ def handler(event, context):
                     }, True)
                 )
                 message = telegram_bot.make_entry_message(result)
-            elif result['action'] in ['TP_HIT', 'SL_HIT', 'CANCELLED']:
+            elif result['action'] in ['TP_HIT', 'SL_HIT', 'CANCELLED', 'IN_PROFIT_UPDATE']:
                 update_res = dynamodb.update_item(
                     TableName="orders",
                     Key={"order_id": {"S": result["order_id"]}},
@@ -135,7 +135,8 @@ def handler(event, context):
                     message = telegram_bot.make_sl_message(result)
                 elif result['action'] == 'CANCELLED':
                     message = telegram_bot.make_cancel_message(result)
-
+                elif result['action'] == 'IN_PROFIT_UPDATE':
+                    message = telegram_bot.make_in_profit_update_message(result)
 
             should_send = False
             if result['action'] == "NEW_SIGNAL":
@@ -146,7 +147,7 @@ def handler(event, context):
                 else:
                     # No previous message, safe to send
                     should_send = True
-            elif result['action'] == "CANCELLED":
+            elif result['action'] in ["CANCELLED", "IN_PROFIT_UPDATE"]:
                 should_send = True
 
             if should_send:

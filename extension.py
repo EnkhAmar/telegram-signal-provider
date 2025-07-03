@@ -91,6 +91,12 @@ class Telegram:
         
         message += "💸💸💸 Plus-Mongolia-Signal 💰💰💰"
         return message
+    
+    def make_in_profit_update_message(self, data):
+        message = (
+            f"Энэ арилжаа +{data['pips']} pips ашигтай явж байна ✅🔥"
+        )
+        return message
 
     def make_sl_message(self, data):
         message = (f"❌Stop Loss Hit ❌\n\n")
