@@ -2,43 +2,13 @@ import re
 from typing import Dict, List, Optional
 
 class RussianForexClassifier:
-    """
-    Classifier for Russian Forex signals that handles:
-    - Entry signals with BuyStop/SellStop/BuyLimit/SellLimit orders
-    - TP hit notifications in various Russian formats
-    - SL hit notifications in Russian
-    - Order cancellations
-    """
-    
     def __init__(self):
-        # Entry pattern for various order types
-        self.entry_pattern = re.compile(
-            r'(?P<order_type>BuyStop|SellStop|BuyLimit|SellLimit)\s*'
-            r'#(?P<pair>[A-Za-z]+\d*)\s*\((?P<timeframe>[a-z0-9]+)\)\s*.*?\n'
-            r'Price:\s*(?P<entry>[\d,]+\.\d+|[\d,]+)\n'
-            r'SL:\s*(?P<sl>[\d,]+\.\d+|[\d,]+)\n'
-            r'TP:\s*(?P<tp>[\d,]+\.\d+|[\d,]+)',
-            re.IGNORECASE
-        )
-        
-        # TP hit detection patterns (Russian)
-        self.tp_keywords = [
-            'фикс', 'бу', 'безубыток', 'TakeProfit', 
-            'пункта', 'пунктов', '✅', '🔥'
-        ]
-        
-        # SL hit detection patterns (Russian)
-        self.sl_keywords = ['SL', '❌', 'пункта', 'пунктов']
-        
-        # Cancellation patterns
-        self.cancel_keywords = ['Delete', 'Отмена', 'Слом']
-        self.cancel_pattern = re.compile(r'(Delete|Отмена)\s*❌')
+        self.cancel_pattern = re.compile(r'(Delete|Отмена)\s*❌', re.IGNORECASE)
 
     def process_message(self, message_data: Dict) -> Optional[Dict]:
         msg_text = self._clean_message(message_data.get('msg_text', ''))
         reply_msg_id = message_data.get('reply_msg_id')
-        
-        # Process entry signal (no reply)
+
         if not reply_msg_id:
             if entry := self._extract_entry(msg_text):
                 order_type = entry['order_type'].upper()
@@ -47,11 +17,10 @@ class RussianForexClassifier:
                     **entry,
                     "action": "NEW_SIGNAL",
                     "type": self._normalize_order_type(order_type),
-                    "side": "BUY" if order_type.startswith('BUY') else "SELL",
+                    "side": "BUY" if order_type.startswith("BUY") else "SELL",
                     "order_id": f"{message_data['chat_id']}_{message_data['msg_id']}"
                 }
-        
-        # Process TP/SL/Cancel hits (replies to original signal)
+
         if reply_msg_id:
             if self._is_cancel_message(msg_text):
                 return {
@@ -60,150 +29,102 @@ class RussianForexClassifier:
                     "order_id": f"{message_data['chat_id']}_{reply_msg_id}"
                 }
             elif self._is_tp_message(msg_text):
-                if tp := self._extract_tp(msg_text):
-                    return {
-                        **message_data,
-                        **tp,
-                        "action": "TP_HIT",
-                        "order_id": f"{message_data['chat_id']}_{reply_msg_id}"
-                    }
+                return {
+                    **message_data,
+                    "action": "TP_HIT",
+                    "order_id": f"{message_data['chat_id']}_{reply_msg_id}"
+                }
             elif self._is_sl_message(msg_text):
-                if sl := self._extract_sl(msg_text):
-                    return {
-                        **message_data,
-                        **sl,
-                        "action": "SL_HIT",
-                        "order_id": f"{message_data['chat_id']}_{reply_msg_id}"
-                    }
-        
+                return {
+                    **message_data,
+                    "action": "SL_HIT",
+                    "order_id": f"{message_data['chat_id']}_{reply_msg_id}"
+                }
+            elif self._is_in_profit_update(msg_text):
+                pips = self._extract_pips(msg_text)
+                return {
+                    **message_data,
+                    "action": "IN_PROFIT_UPDATE",
+                    "order_id": f"{message_data['chat_id']}_{reply_msg_id}",
+                    "pips": pips
+                }
+
         return None
 
     def _normalize_order_type(self, order_type: str) -> str:
-        """Convert order type to standardized format"""
-        order_type = order_type.upper()
-        if order_type == "BUYSTOP":
-            return "BUY_STOP"
-        elif order_type == "SELLSTOP":
-            return "SELL_STOP"
-        elif order_type == "BUYLIMIT":
-            return "BUY_LIMIT"
-        elif order_type == "SELLLIMIT":
-            return "SELL_LIMIT"
-        return order_type
+        return {
+            "BUYSTOP": "BUY_STOP",
+            "SELLSTOP": "SELL_STOP",
+            "BUYLIMIT": "BUY_LIMIT",
+            "SELLLIMIT": "SELL_LIMIT"
+        }.get(order_type.upper(), order_type)
 
     def _extract_entry(self, message: str) -> Optional[Dict]:
-        """Extract entry signal with order type, price, SL and TP"""
-        # Normalize line endings and clean the message
-        message = self._clean_message(message.replace('\r\n', '\n'))
-        
-        # More flexible pattern to handle variations in the format
         pattern = re.compile(
             r'(?P<order_type>BuyStop|SellStop|BuyLimit|SellLimit)\s*'
             r'#(?P<pair>[A-Za-z]+\d*)\s*\((?P<timeframe>[a-z0-9]+)\)[^\n]*\n'
-            r'(?:.*\n)?.*Price:\s*(?P<entry>[\d,]+\.\d+|[\d,]+)\s*\n'
-            r'.*SL:\s*(?P<sl>[\d,]+\.\d+|[\d,]+)\s*\n'
-            r'.*TP:\s*(?P<tp>[\d,]+\.\d+|[\d,]+)',
+            r'(?:.*\n)?.*Price:\s*(?P<entry>[\d,.]+)\s*\n'
+            r'.*SL:\s*(?P<sl>[\d,.]+)\s*\n'
+            r'.*TP:\s*(?P<tp>[\d,.]+)',
             re.IGNORECASE
         )
-        
         match = pattern.search(message)
         if not match:
             return None
-            
+
         return {
-            "pair": match.group('pair'),
-            "order_type": match.group('order_type'),
-            "entry": float(match.group('entry')),
-            "stop_loss": float(match.group('sl')),
-            "take_profit": [float(match.group('tp'))],
-            "timeframe": match.group('timeframe')
+            "pair": match.group("pair"),
+            "order_type": match.group("order_type"),
+            "entry": float(match.group("entry").replace(',', '')),
+            "stop_loss": float(match.group("sl").replace(',', '')),
+            "take_profit": [float(match.group("tp").replace(',', ''))],
+            "timeframe": match.group("timeframe")
         }
 
     def _is_tp_message(self, message: str) -> bool:
-        """Check if message is a TP notification (Russian)"""
         message_lower = message.lower()
-        
-        # Explicitly exclude these status messages
-        excluded_phrases = [
-            'если пропустили уведомление',
-            'в работе',
-            'переведите в бу'  # Without TP hit context
-        ]
-        
-        if any(phrase in message_lower for phrase in excluded_phrases):
+
+        # Skip common working/neutral messages
+        if any(phrase in message_lower for phrase in ['в работе', 'если пропустили']):
             return False
-            
-        # Positive indicators
-        tp_indicators = [
-            'фикс', 
-            'take profit',
-            'пункта', 
-            'пунктов', 
-            '✅', 
-            '🔥',
-            # Only count "бу" when combined with profit indicators
-            ('бу', 'пункт')  # Both words must be present
+
+        # Strong TP confirmation keywords
+        tp_phrases = [
+            'takeprofit', 'tp1 hit', 'tp2 hit', 'tp3 hit',
+            'tp1 выполнен', 'tp достигнут'
         ]
-        
-        # Check for positive indicators
-        has_tp_indicator = False
-        for indicator in tp_indicators:
-            if isinstance(indicator, tuple):
-                # All parts of tuple must be present
-                if all(part in message_lower for part in indicator):
-                    has_tp_indicator = True
-                    break
-            elif indicator in message_lower:
-                has_tp_indicator = True
-                break
-                
-        return (
-            has_tp_indicator
-            and '❌' not in message_lower  # avoid classifying SL or cancel as TP
-            and not self._is_cancel_message(message)
-        )
+
+        return any(tp in message_lower for tp in tp_phrases) and not self._is_cancel_message(message)
+
 
     def _is_sl_message(self, message: str) -> bool:
-        """Check if message is an SL notification (Russian)"""
-        message_lower = message.lower()
-        return (
-            '❌' in message_lower
-            and any(kw in message_lower for kw in self.sl_keywords)
-            and not self._is_cancel_message(message)
-            and not self._is_tp_message(message)  # ensure not a TP
-        )
+        message = message.lower()
+        return '❌' in message and 'sl' in message
 
     def _is_cancel_message(self, message: str) -> bool:
-        """Check if message is an order cancellation"""
         return self.cancel_pattern.search(message) is not None
 
-    def _extract_tp(self, message: str) -> Optional[Dict]:
-        """Extract TP hit details from Russian messages"""
-        # Extract pips (пунктов)
-        pips_match = re.search(r'([+-]?\d+)\s*пункт[аов]*', message)
-        pips = int(pips_match.group(1)) if pips_match else None
-        
-        # Determine if partial TP or full TP
-        is_partial = 'фикс' in message.lower() or 'часть' in message.lower()
-        
-        return {
-            "pips": pips,
-            "is_partial": is_partial,
-            "is_breakeven": any(word in message.lower() for word in ['бу', 'безубыток'])
-        }
+    def _is_in_profit_update(self, message: str) -> bool:
+        message_lower = message.lower()
 
-    def _extract_sl(self, message: str) -> Optional[Dict]:
-        """Extract SL hit details from Russian messages"""
-        # Extract pips (пунктов)
-        pips_match = re.search(r'([+-]?\d+)\s*пункт[аов]*', message)
-        pips = int(pips_match.group(1)) if pips_match else None
-        
-        return {
-            "pips": pips
-        }
+        if self._is_tp_message(message) or self._is_sl_message(message) or self._is_cancel_message(message):
+            return False
+
+        # Consider any message with profit-related phrasing as IN_PROFIT_UPDATE
+        indicators = ['фикс', 'бу', 'безубыток', 'плюс', 'profit', 'профит', 'вышли в +']
+
+        has_indicator = any(ind in message_lower for ind in indicators)
+        has_pips = re.search(r'(\+|плюс)\s*\d+\s*пункт[аов]*', message_lower)
+
+        return has_indicator and has_pips is not None
+
+    def _extract_pips(self, message: str) -> Optional[int]:
+        match = re.search(r'(\+|\bплюс\s*)(\d+)\s*пункт[аов]*', message.lower())
+        if match:
+            return int(match.group(2))
+        return None
 
     def _clean_message(self, message: str) -> str:
-        # Keep line breaks, clean extra spaces
         return '\n'.join(' '.join(line.strip().split()) for line in message.strip().split('\n'))
 
 
@@ -293,6 +214,21 @@ TP: 4061.0
             "reply_msg_id": 1,
         },
     ]
+
+    profit_msgs = [
+        {
+            "chat_id": -1000,
+            "msg_id": 11,
+            "msg_text": "+34 пункта ✅",
+            "reply_msg_id": 1,
+        },
+        {
+            "chat_id": -1000,
+            "msg_id": 12,
+            "msg_text": "Плюс 80 пунктов 🔥",
+            "reply_msg_id": 1,
+        },
+    ]
     
     # Test SL Hit Signals
     sl_msgs = [
@@ -338,6 +274,10 @@ TP: 4061.0
     
     print("\n=== TP Hit Signals ===")
     for msg in tp_msgs:
+        print(classifier.process_message(msg))
+
+    print("\n=== In Profit Update ===")
+    for msg in profit_msgs:
         print(classifier.process_message(msg))
     
     print("\n=== SL Hit Signals ===")
