@@ -38,7 +38,7 @@ class Telegram:
 
         # Handle TP display - single line if only one TP
         if len(data['take_profit']) == 1:
-            tp_lines = f"💰TP {data['take_profit'][0]}"
+            tp_lines = f"💰TP <code>{data['take_profit'][0]}</code>"
         else:
             tp_lines = "\n".join([f"💰TP{idx+1} {tp}" for idx, tp in enumerate(data['take_profit'])])
         
