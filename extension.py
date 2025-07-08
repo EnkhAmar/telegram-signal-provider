@@ -66,7 +66,7 @@ class Telegram:
             f"{timeframe_line}"
             f"{order_type_line}\n\n"
             f"{tp_lines}\n"
-            f"🚫SL {data['stop_loss']}"
+            f"🚫SL <code>{data['stop_loss']}</code>"
             f"{leverage_line}\n\n"
             "❗️Арилжаанд орох хамгийн дээд ханшнаас дээгүүр орсон тохиолдолд энэхүү арилжаа нь манай сувгийн signal-тай нийцэхгүй.\n\n"
             "💸💸💸 Plus-Mongolia-Signal 💰💰💰"
