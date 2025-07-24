@@ -36,6 +36,7 @@ def connect_handler(event, context):
         TableName="websocket_connections",
         Item=json_util.dumps({
             "connection_id": connection_id,
+            "status": 1,
             "connected_at": event['requestContext']['requestTimeEpoch']
         }, True)
     )
@@ -61,8 +62,16 @@ def disconnect_handler(event, context):
 
 
 def send_message_to_all_connections(message):
-    connections = json_util.loads(dynamodb.scan(
+    connections = json_util.loads(dynamodb.query(
         TableName="websocket_connections",
+        IndexName="status-connected_at-index",
+        KeyConditionExpression="#status = :status",
+        ExpressionAttributeNames={
+            '#status': 'status'
+        },
+        ExpressionAttributeValues=json_util.dumps({
+            ":status": 1,
+        }, True),
         ProjectionExpression="connection_id"
     ).get('Items', []), True)
     
@@ -101,7 +110,7 @@ def message_handler(event, context):
             Data=json.dumps({"echo": msg}).encode('utf-8')
         )
     except apigw_client.exceptions.GoneException:
-        dynamodb.delete_item(TableName="websocket_connections", Key={'connectionId': connection_id})
+        dynamodb.delete_item(TableName="websocket_connections", Key=json_util.dumps({'connectionId': connection_id}, True))
 
     return {'statusCode': 200}
 

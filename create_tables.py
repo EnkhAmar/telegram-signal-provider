@@ -168,6 +168,24 @@ response = dynamodb.create_table(
         }
     ],
     BillingMode='PAY_PER_REQUEST',
+    GlobalSecondaryIndexes=[
+        {
+            'IndexName': 'status-connected_at-index',
+            'KeySchema': [
+                {
+                    'AttributeName': 'status',
+                    'KeyType': 'HASH',
+                },
+                {
+                    'AttributeName': 'connected_at',
+                    'KeyType': 'RANGE'
+                }
+            ],
+            'Projection': {
+                'ProjectionType': 'ALL'
+            }
+        }
+    ],
     Tags=[
         {            'Key': 'Description',
             'Value': 'websocket_connections connection_id'

@@ -176,6 +176,12 @@ def handler(event, context):
                     InvocationType="Event",
                     Payload=json.dumps(result).encode("utf-8"),
                 )
+            if chat_id in [] and result['action'] == 'NEW_SIGNAL':
+                lambda_client.invoke(
+                    FunctionName='tg-signal-service-prod-broadcastMessageHandler',
+                    InvocationType='Event',
+                    Payload=json.dumps({'body': {'message': result}}).encode("utf-8")
+                )
 
         except json.JSONDecodeError as e:
             print(f"Failed to decode message body: {message_body} due to {str(e)}")
