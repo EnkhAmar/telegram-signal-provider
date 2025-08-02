@@ -176,7 +176,7 @@ def handler(event, context):
                     InvocationType="Event",
                     Payload=json.dumps(result).encode("utf-8"),
                 )
-            if chat_id in [] and result['action'] == 'NEW_SIGNAL':
+            if chat_id in [-1002643902459,] and result['action'] == 'NEW_SIGNAL':
                 lambda_client.invoke(
                     FunctionName='tg-signal-service-prod-broadcastMessageHandler',
                     InvocationType='Event',
