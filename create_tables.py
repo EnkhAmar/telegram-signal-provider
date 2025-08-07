@@ -194,3 +194,46 @@ response = dynamodb.create_table(
     TableClass='STANDARD',
     DeletionProtectionEnabled=False
 )
+
+
+# binance_api_key_secrets
+response = dynamodb.create_table(
+    TableName='binance_api_key_secrets',
+    AttributeDefinitions=[
+        {
+            'AttributeName': 'owner',
+            'AttributeType': 'S'
+        },
+        {
+            'AttributeName': 'status',
+            'AttributeType': 'S'
+        },
+    ],
+    KeySchema=[
+        {            'AttributeName': 'owner',
+            'KeyType': 'HASH'
+        }
+    ],
+    BillingMode='PAY_PER_REQUEST',
+    GlobalSecondaryIndexes=[
+        {
+            'IndexName': 'status-index',
+            'KeySchema': [
+                {
+                    'AttributeName': 'status',
+                    'KeyType': 'HASH',
+                },
+            ],
+            'Projection': {
+                'ProjectionType': 'ALL'
+            }
+        }
+    ],
+    Tags=[
+        {            'Key': 'Description',
+            'Value': 'binance_api_key_secrets owner status api_key secret_key',
+        },
+    ],
+    TableClass='STANDARD',
+    DeletionProtectionEnabled=False,
+)
