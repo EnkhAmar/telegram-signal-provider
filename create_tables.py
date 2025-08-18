@@ -16,6 +16,14 @@ response = dynamodb.create_table(
             'AttributeName': 'name',
             'AttributeType': 'S'
         },
+        {
+            'AttributeName': 'owner',
+            'AttributeType': 'S'
+        },
+        {
+            'AttributeName': 'status',
+            'AttributeType': 'S'
+        }
     ],
     KeySchema=[
         {
@@ -40,12 +48,28 @@ response = dynamodb.create_table(
                 'ProjectionType': 'ALL',
             },
         },
+        {
+            'IndexName': 'owner-status-index',
+            'KeySchema': [
+                {
+                    'AttributeName': 'owner',
+                    'KeyType': 'HASH'
+                },
+                {
+                    'AttributeName': 'status',
+                    'KeyType': 'RANGE'
+                },
+            ],
+            'Projection': {
+                'ProjectionType': 'ALL',
+            },
+        },
     ],
     BillingMode='PAY_PER_REQUEST',
     Tags=[
         {
             'Key': 'Description',
-            'Value': 'signal_channels chat_id signal_type name'
+            'Value': 'signal_channels chat_id signal_type name owner status'
         },
     ],
     TableClass='STANDARD',
@@ -230,8 +254,70 @@ response = dynamodb.create_table(
         }
     ],
     Tags=[
-        {            'Key': 'Description',
-            'Value': 'binance_api_key_secrets owner status api_key secret_key',
+        {            
+            'Key': 'Description',
+            'Value': 'binance_api_key_secrets owner status api_key secret_key testnet',
+        },
+    ],
+    TableClass='STANDARD',
+    DeletionProtectionEnabled=False,
+)
+
+
+# forex_account_credentials
+response = dynamodb.create_table(
+    TableName='forex_account_credentials',
+    AttributeDefinitions=[
+        {
+            'AttributeName': 'owner',
+            'AttributeType': 'S'
+        },
+        {
+            'AttributeName': 'status',
+            'AttributeType': 'S'
+        },
+    ],
+    KeySchema=[
+        {            
+            'AttributeName': 'owner',
+            'KeyType': 'HASH'
+        }
+    ],
+    BillingMode='PAY_PER_REQUEST',
+    GlobalSecondaryIndexes=[
+        {
+            'IndexName': 'status-index',
+            'KeySchema': [
+                {
+                    'AttributeName': 'status',
+                    'KeyType': 'HASH',
+                },
+            ],
+            'Projection': {
+                'ProjectionType': 'ALL'
+            }
+        },
+        {
+            'IndexName': 'owner-status-index',
+            'KeySchema': [
+                {
+                    'AttributeName': 'owner',
+                    'KeyType': 'HASH'
+                },
+                {
+                    'AttributeName': 'status',
+                    'KeyType': 'RANGE'
+                }
+            ],
+            'Projection': {
+                'ProjectionType': 'ALL'
+            }
+        }
+    ],
+    Tags=[
+        {            
+            'Key': 'Description',
+            'Value': 'forex_account_credentials owner status server account_id password strategy',
         },
     ],
     TableClass='STANDARD',

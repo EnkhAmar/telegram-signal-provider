@@ -25,7 +25,9 @@ def handler(event, context):
             msg_type = message.get("msg_type", "NEW")
             signal_type = message['signal_type']
             TO_CHANNEL_ID = TO_CHANNEL_FOREX if signal_type == "forex" else TO_CHANNEL_CRYPTO
-            if chat_id in [-1002643902459, -1002587201256]:
+            if chat_id in [-1002643902459, -1002587201256]: # plus demo
+                TO_CHANNEL_ID = -1002665107295
+            if chat_id in [-1003006608856]: # sanchir
                 TO_CHANNEL_ID = -1002665107295
                 
             prev_msg = None
@@ -176,11 +178,11 @@ def handler(event, context):
                     InvocationType="Event",
                     Payload=json.dumps(result).encode("utf-8"),
                 )
-            if chat_id in [-1002643902459,-1001297727353] and result['action'] == 'NEW_SIGNAL':
+            if chat_id in [-1002643902459,-1001297727353] and result['action'] in ['NEW_SIGNAL', 'CLOSED', 'CANCELLED', 'BREAKEVEN']:
                 lambda_client.invoke(
                     FunctionName='tg-signal-service-prod-broadcastMessageHandler',
                     InvocationType='Event',
-                    Payload=json.dumps({'body': {'message': result}}).encode("utf-8")
+                    Payload=json.dumps({'body': {'message': result}}).encode("utf-8"),
                 )
 
         except json.JSONDecodeError as e:
