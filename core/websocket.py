@@ -27,6 +27,7 @@ def handler(event, context):
 
 def connect_handler(event, context):
     token = event['queryStringParameters'].get('token')
+    channel_id = event['queryStringParameters'].get('channel_id')
     if token != 'TOKEN':
         return {'statusCode': 403, 'body': 'Unauthorized'}
     
@@ -37,6 +38,7 @@ def connect_handler(event, context):
         Item=json_util.dumps({
             "connection_id": connection_id,
             "status": 1,
+            "channel_id": channel_id,
             "connected_at": event['requestContext']['requestTimeEpoch']
         }, True)
     )
@@ -83,11 +85,41 @@ def send_message_to_all_connections(message):
         except Exception as e:
             print(f"Failed to send message to {connection_id}: {e}")
 
+
+def send_message_to_connections(channel_id, message):
+    connections = json_util.loads(dynamodb.query(
+        TableName="websocket_connections",
+        IndexName="status-connected_at-index",
+        KeyConditionExpression="#status = :status",
+        ExpressionAttributeNames={
+            '#status': 'status'
+        },
+        ExpressionAttributeValues=json_util.dumps({
+            ":status": 1,
+        }, True),
+        ProjectionExpression="connection_id, channel_id"
+    ).get('Items', []), True)
+
+    for connection in connections:
+        if connection['channel_id'] == channel_id:
+            connection_id = connection['connection_id']
+            try:
+                apigw_client.post_to_connection(ConnectionId=connection_id, Data=json.dumps({'message': message}).encode('utf-8'))
+            except Exception as e:
+                print(f"Failed to send message to {connection_id}: {e}")
+
+
 def broadcast_message(event, context):
     body = event['body']
     message = body.get('message', 'Hello, everyone!')
-    
-    send_message_to_all_connections(message)
+    print("broadcast message", message)
+    print("broadcast message type", type(message))
+
+    channel_id = message.get('chat_id')
+    if channel_id:
+        send_message_to_connections(str(channel_id), message)
+    else:
+        send_message_to_all_connections(message)
     
     return {
         "statusCode": 200,
