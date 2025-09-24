@@ -27,6 +27,8 @@ def handler(event, context):
             TO_CHANNEL_ID = TO_CHANNEL_FOREX if signal_type == "forex" else TO_CHANNEL_CRYPTO
             if chat_id in [-1002643902459, -1002587201256]:
                 TO_CHANNEL_ID = -1002665107295
+            if chat_id == -1001150362511:
+                TO_CHANNEL_ID = -1002665107295
                 
             prev_msg = None
 

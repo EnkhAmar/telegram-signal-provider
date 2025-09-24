@@ -2,6 +2,8 @@ from classifiers.LordForex import LordForexClassifier
 from classifiers.WolfForex import WolfForexClassifier
 from classifiers.WolfCrypto import WolfCryptoClassifier
 from classifiers.RussianForex import RussianForexClassifier
+# from classifiers.SanchirForex import SanchirForexClassifier
+from classifiers.FxGoldKiller import FxGoldKillerClassifier
 from typing import Dict, Optional
 
 
@@ -14,6 +16,8 @@ class ForexSignalProcessor:
             'lord_forex': LordForexClassifier(),
             'wolf_crypto': WolfCryptoClassifier(),
             'russian_forex': RussianForexClassifier(),
+            # 'sanchir_forex': SanchirForexClassifier(),
+            'fx_gold_killer': FxGoldKillerClassifier(),
         }
     
     def process_message(self, message_data: dict) -> Optional[Dict]:
@@ -32,6 +36,8 @@ class ForexSignalProcessor:
             classifier = self.classifiers['russian_forex']
         elif message_data['chat_id'] == -1002587201256:
             classifier = self.classifiers['wolf_crypto']
+        elif message_data['chat_id'] == -1001150362511:
+            classifier = self.classifiers['fx_gold_killer']
         else:
             return None
             
