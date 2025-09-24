@@ -1,5 +1,6 @@
 import os
 import json
+import argparse
 from dotenv import load_dotenv
 from telethon import TelegramClient, events
 from extension import sqs_client, dynamodb
@@ -14,9 +15,19 @@ api_hash = os.getenv("TG_API_HASH")
 session_name = os.getenv("TG_SESSION_NAME")
 
 # Source channels as a list of integers
-to_channel = int(os.getenv("TO_CHANNEL_ID"))
-from_channels = json_util.loads(dynamodb.scan(
+owner_key = "plus"
+from_channels = json_util.loads(dynamodb.query(
     TableName="signal_channels",
+    IndexName="owner-status-index",
+    KeyConditionExpression="#owner = :owner AND #status = :status",
+    ExpressionAttributeNames={
+        "#owner": "owner",
+        "#status": "status"
+    },
+    ExpressionAttributeValues=json_util.dumps({
+        ":owner": owner_key,
+        ":status": "ACTIVE"
+    }, True)
 ).get("Items", []))
 print("from_channels", from_channels)
 from_chat_ids = [channel['chat_id'] for channel in from_channels if channel.get('status') == 'ACTIVE']
@@ -31,12 +42,6 @@ client = TelegramClient(session_name, api_id, api_hash)
 async def new_message_handler(event):
     try:
         print("EVENT: \n", event)
-        # print("message=: \n", event.stringify())
-        # print("message=: \n", dir(event))
-        # print("channel_id=: \n", event.chat_id)
-        # print("message_id=: \n", event.message.id)
-        # print("message_date=: \n", event.message.date)
-        # print("reply_to=: \n", event.reply_to.reply_to_msg_id if event.reply_to else None)
         reply_msg_id = event.reply_to.reply_to_msg_id if event.reply_to else None
         signal_type = next(filter(lambda c: c['chat_id'] == event.chat_id, from_channels))['signal_type']
         
@@ -55,6 +60,7 @@ async def new_message_handler(event):
             QueueUrl="https://sqs.ap-northeast-2.amazonaws.com/549378813718/tg_msg_queue.fifo",
             MessageBody=json.dumps(body),
             MessageGroupId=f'queue-{event.chat_id}',
+            MessageDeduplicationId=str(uuid.uuid4()),
         )
         print("sqs_response = ", sqs_response, "\n\n")
         # await client.forward_messages(to_channel, event.message)
@@ -84,6 +90,7 @@ async def edited_message_handler(event):
             QueueUrl="https://sqs.ap-northeast-2.amazonaws.com/549378813718/tg_msg_queue.fifo",
             MessageBody=json.dumps(body),
             MessageGroupId=f'queue-{event.chat_id}',
+            MessageDeduplicationId=str(uuid.uuid4()),
         )
         print("sqs_response = ", sqs_response, "\n\n")
 
@@ -112,6 +119,7 @@ async def deleted_message_handler(event):
             QueueUrl="https://sqs.ap-northeast-2.amazonaws.com/549378813718/tg_msg_queue.fifo",
             MessageBody=json.dumps(body),
             MessageGroupId=f'queue-{event.chat_id}',
+            MessageDeduplicationId=str(uuid.uuid4()),
         )
         print("sqs_response = ", sqs_response, "\n\n")
     except Exception as e:

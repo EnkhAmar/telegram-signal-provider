@@ -25,7 +25,9 @@ def handler(event, context):
             msg_type = message.get("msg_type", "NEW")
             signal_type = message['signal_type']
             TO_CHANNEL_ID = TO_CHANNEL_FOREX if signal_type == "forex" else TO_CHANNEL_CRYPTO
-            if chat_id in [-1002643902459, -1002587201256]:
+            if chat_id in [-1002643902459, -1002587201256]: # plus demo
+                TO_CHANNEL_ID = -1002665107295
+            if chat_id in [-1003006608856]: # sanchir
                 TO_CHANNEL_ID = -1002665107295
             if chat_id == -1001150362511:
                 TO_CHANNEL_ID = -1002665107295
@@ -76,7 +78,7 @@ def handler(event, context):
                     TableName="telegram_msgs",
                     Key=json_util.dumps({"chat_id": chat_id, "msg_id": msg_id}, True),
                 ).get("Item", None), True)
-                print("prev_msg : ", prev_msg)
+                print("prev_msg to delete : ", prev_msg)
                 # if prev_msg:
                 #     prev_order = json_util.loads(dynamodb.get_item(
                 #         TableName="orders",
@@ -114,7 +116,7 @@ def handler(event, context):
                     }, True)
                 )
                 message = telegram_bot.make_entry_message(result)
-            elif result['action'] in ['TP_HIT', 'SL_HIT', 'CANCELLED']:
+            elif result['action'] in ['TP_HIT', 'SL_HIT', 'CANCELLED', 'IN_PROFIT_UPDATE']:
                 update_res = dynamodb.update_item(
                     TableName="orders",
                     Key={"order_id": {"S": result["order_id"]}},
@@ -137,7 +139,8 @@ def handler(event, context):
                     message = telegram_bot.make_sl_message(result)
                 elif result['action'] == 'CANCELLED':
                     message = telegram_bot.make_cancel_message(result)
-
+                elif result['action'] == 'IN_PROFIT_UPDATE':
+                    message = telegram_bot.make_in_profit_update_message(result)
 
             should_send = False
             if result['action'] == "NEW_SIGNAL":
@@ -148,7 +151,7 @@ def handler(event, context):
                 else:
                     # No previous message, safe to send
                     should_send = True
-            elif result['action'] == "CANCELLED":
+            elif result['action'] in ["CANCELLED", "IN_PROFIT_UPDATE"]:
                 should_send = True
 
             if should_send:
@@ -176,6 +179,12 @@ def handler(event, context):
                     FunctionName="binance-trade-handler",
                     InvocationType="Event",
                     Payload=json.dumps(result).encode("utf-8"),
+                )
+            if chat_id in [-1002643902459,-1001297727353,-1003006608856] and result['action'] in ['NEW_SIGNAL', 'CLOSED', 'CANCELLED', 'BREAKEVEN']:
+                lambda_client.invoke(
+                    FunctionName='tg-signal-service-prod-broadcastMessageHandler',
+                    InvocationType='Event',
+                    Payload=json.dumps({'body': {'message': result}}).encode("utf-8"),
                 )
 
         except json.JSONDecodeError as e:

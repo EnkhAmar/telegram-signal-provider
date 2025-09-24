@@ -38,7 +38,7 @@ class Telegram:
 
         # Handle TP display - single line if only one TP
         if len(data['take_profit']) == 1:
-            tp_lines = f"💰TP {data['take_profit'][0]}"
+            tp_lines = f"💰TP <code>{data['take_profit'][0]}</code>"
         else:
             tp_lines = "\n".join([f"💰TP{idx+1} {tp}" for idx, tp in enumerate(data['take_profit'])])
         
@@ -50,7 +50,7 @@ class Telegram:
         
         # Add order type if exists (for -1002643902459 chat_id)
         order_type_line = ""
-        if data.get('chat_id') in [-1002643902459, 1001297727353] and 'type' in data:
+        if data.get('chat_id') in [-1002643902459, -1001297727353] and 'type' in data:
             type_mapping = {
                 'BUY_LIMIT': 'BUY LIMIT',
                 'SELL_LIMIT': 'SELL LIMIT',
@@ -66,7 +66,7 @@ class Telegram:
             f"{timeframe_line}"
             f"{order_type_line}\n\n"
             f"{tp_lines}\n"
-            f"🚫SL {data['stop_loss']}"
+            f"🚫SL <code>{data['stop_loss']}</code>"
             f"{leverage_line}\n\n"
             "❗️Арилжаанд орох хамгийн дээд ханшнаас дээгүүр орсон тохиолдолд энэхүү арилжаа нь манай сувгийн signal-тай нийцэхгүй.\n\n"
             "💸💸💸 Plus-Mongolia-Signal 💰💰💰"
@@ -90,6 +90,12 @@ class Telegram:
             message += f"TP{data['tp_level']} hit @ {data['exit_price']}\n\n"
         
         message += "💸💸💸 Plus-Mongolia-Signal 💰💰💰"
+        return message
+    
+    def make_in_profit_update_message(self, data):
+        message = (
+            f"Энэ арилжаа +{data['pips']} pips ашигтай явж байна ✅🔥"
+        )
         return message
 
     def make_sl_message(self, data):
