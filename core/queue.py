@@ -29,7 +29,7 @@ def handler(event, context):
                 TO_CHANNEL_ID = -1002665107295
             if chat_id in [-1003006608856]: # sanchir
                 TO_CHANNEL_ID = -1002665107295
-            if chat_id == -1001150362511:
+            if chat_id == -1001150362511: # fx gold killer
                 TO_CHANNEL_ID = -1002665107295
                 
             prev_msg = None

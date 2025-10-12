@@ -1,4 +1,6 @@
 from classifiers.LordForex import LordForexClassifier
+from classifiers.VipCryptoClassifier import VipCryptoClassifier
+from classifiers.VipCryptoClassifier import VipCryptoClassifier
 from classifiers.WolfForex import WolfForexClassifier
 from classifiers.WolfCrypto import WolfCryptoClassifier
 from classifiers.RussianForex import RussianForexClassifier
@@ -16,6 +18,7 @@ class ForexSignalProcessor:
             'lord_forex': LordForexClassifier(),
             'wolf_crypto': WolfCryptoClassifier(),
             'russian_forex': RussianForexClassifier(),
+            'vip_crypto': VipCryptoClassifier(),
             'sanchir_forex': SanchirForexClassifier(),
             'fx_gold_killer': FxGoldKillerClassifier(),
         }
@@ -31,6 +34,8 @@ class ForexSignalProcessor:
             classifier = self.classifiers['wolf_crypto']
         elif message_data['chat_id'] == -1001297727353:
             classifier = self.classifiers['russian_forex']
+        elif message_data['chat_id'] == -1002343296096:
+            classifier = self.classifiers['vip_crypto']
             
         elif message_data['chat_id'] == -1003006608856:
             classifier = self.classifiers['sanchir_forex']
