@@ -43,7 +43,7 @@ class ForexSignalProcessor:
         elif message_data['chat_id'] == -1002643902459:
             classifier = self.classifiers['russian_forex']
         elif message_data['chat_id'] == -1002587201256:
-            classifier = self.classifiers['wolf_crypto']
+            classifier = self.classifiers['vip_crypto']
         elif message_data['chat_id'] == -1001150362511:
             classifier = self.classifiers['fx_gold_killer']
         else:

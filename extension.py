@@ -37,10 +37,14 @@ class Telegram:
         side_emoji = "📈" if data['side'] == 'BUY' else "📉"
 
         # Handle TP display - single line if only one TP
-        if len(data['take_profit']) == 1:
-            tp_lines = f"💰TP <code>{data['take_profit'][0]}</code>"
+        take_profits = data.get('take_profit', [])
+        if take_profits:
+            if len(take_profits) == 1:
+                tp_lines = f"💰TP <code>{take_profits[0]}</code>"
+            else:
+                tp_lines = "\n".join([f"💰TP{idx+1} {tp}" for idx, tp in enumerate(take_profits)])
         else:
-            tp_lines = "\n".join([f"💰TP{idx+1} {tp}" for idx, tp in enumerate(data['take_profit'])])
+            tp_lines = ""
         
         # Optional leverage line
         leverage_line = f"\n\n〽️Хөшүүрэг {data['leverage']}х" if 'leverage' in data else ""
@@ -60,13 +64,16 @@ class Telegram:
             }
             order_type_line = f"\n🔹 Type: {type_mapping.get(data['type'], data['type'])}"
 
+        # Optional stop loss line
+        stop_loss_line = f"🚫SL <code>{data['stop_loss']}</code>\n" if data.get('stop_loss') else ""
+
         message = (
             f"<b>{data['pair']}</b> {side_emoji}{data['side']}\n\n"
             f"Орох цэг: <code>{data['entry']}</code>"
             f"{timeframe_line}"
             f"{order_type_line}\n\n"
             f"{tp_lines}\n"
-            f"🚫SL <code>{data['stop_loss']}</code>"
+            f"{stop_loss_line}"
             f"{leverage_line}\n\n"
             "❗️Арилжаанд орох хамгийн дээд ханшнаас дээгүүр орсон тохиолдолд энэхүү арилжаа нь манай сувгийн signal-тай нийцэхгүй.\n\n"
             "💸💸💸 Plus-Mongolia-Signal 💰💰💰"
