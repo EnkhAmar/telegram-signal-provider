@@ -113,7 +113,8 @@ def handler(event, context):
                         "created_at": msg_date,
                         "updated_at": "",
                         "extracted": result,
-                    }, True)
+                    }, True),
+                    ConditionExpression="attribute_not_exists(order_id)",
                 )
                 message = telegram_bot.make_entry_message(result)
             elif result['action'] in ['TP_HIT', 'SL_HIT', 'CANCELLED', 'IN_PROFIT_UPDATE']:
@@ -143,7 +144,7 @@ def handler(event, context):
                     message = telegram_bot.make_in_profit_update_message(result)
 
             should_send = False
-            if result['action'] == "NEW_SIGNAL":
+            if result['action'] == "NEW_SIGNAL" and msg_type != "EDITED":
                 should_send = True
             elif result['action'] in ["TP_HIT", "SL_HIT"]:
                 if prev_msg and prev_msg['action'] in ["TP_HIT", "SL_HIT"]:
@@ -180,7 +181,7 @@ def handler(event, context):
                     InvocationType="Event",
                     Payload=json.dumps(result).encode("utf-8"),
                 )
-            if chat_id in [-1002643902459,-1001297727353,-1003006608856] and result['action'] in ['NEW_SIGNAL', 'CLOSED', 'CANCELLED', 'BREAKEVEN']:
+            if chat_id in [-1002643902459,-1001297727353,-1003006608856] and result['action'] in ['NEW_SIGNAL', 'CLOSED', 'CANCELLED', 'BREAKEVEN'] and msg_type != "EDITED":
                 lambda_client.invoke(
                     FunctionName='tg-signal-service-prod-broadcastMessageHandler',
                     InvocationType='Event',
