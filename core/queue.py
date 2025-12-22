@@ -31,6 +31,8 @@ def handler(event, context):
                 TO_CHANNEL_ID = -1002665107295
             if chat_id == -1001150362511: # fx gold killer
                 TO_CHANNEL_ID = -1002665107295
+            # if chat_id == -1001717291385: # gold trading tfe
+            #     TO_CHANNEL_ID = -1002665107295
                 
             prev_msg = None
 
@@ -181,7 +183,7 @@ def handler(event, context):
                     InvocationType="Event",
                     Payload=json.dumps(result).encode("utf-8"),
                 )
-            if chat_id in [-1002643902459,-1001297727353,-1003006608856] and result['action'] in ['NEW_SIGNAL', 'CLOSED', 'CANCELLED', 'BREAKEVEN'] and msg_type != "EDITED":
+            if chat_id in [-1002643902459,-1001297727353,-1003006608856, -1001717291385] and result['action'] in ['NEW_SIGNAL', 'CLOSED', 'CANCELLED', 'BREAKEVEN'] and msg_type != "EDITED":
                 lambda_client.invoke(
                     FunctionName='tg-signal-service-prod-broadcastMessageHandler',
                     InvocationType='Event',

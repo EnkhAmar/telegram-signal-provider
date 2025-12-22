@@ -1,7 +1,9 @@
 import re
 from typing import Dict, List, Optional
 
-class RussianForexClassifier:
+# "Остаток закрылся в бу " - Арилжааг хаасан үед ашиглаж байна
+
+class GoldTradingTFEClassifier:
     def __init__(self):
         self.cancel_pattern = re.compile(r'(Delete|Отмена|Удаляю)\s*❌', re.IGNORECASE)
 
@@ -130,18 +132,18 @@ class RussianForexClassifier:
 
 # Example Usage
 if __name__ == "__main__":
-    classifier = RussianForexClassifier()
+    classifier = GoldTradingTFEClassifier()
     
     # Test Entry Signals
     entry_msgs = [
         {
             "chat_id": -1000,
             "msg_id": 1,
-            "msg_text": """BuyStop #GBPUSD (D1) ПГиП
-Price: 1.36099
-SL: 1.34239
-TP: 1.39459
-(FX)""",
+            "msg_text": """BuyStop #XAUUSD (h4) восх.треугольник
+Price: 4353.83
+SL: 4324.25
+TP: 4422.71
+(Metals)""",
             "reply_msg_id": None,
         },
         {
