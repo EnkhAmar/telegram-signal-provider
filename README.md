@@ -6,6 +6,8 @@ pm2 start signal_listener.py --interpreter /home/ubuntu/telegram-signal-provider
 
 sudo pm2 start echo.py --interpreter=/home/ubuntu/telegram-signal-provider/env/bin/python3
 
+pm2 start signal_test.py   --name amra-signal  -- --owner amra
+
 
 ```
 sudo pm2 start /home/ubuntu/telegram-signal-provider/signal_listener.py \
